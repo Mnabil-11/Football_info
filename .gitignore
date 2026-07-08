@@ -1,3 +1,28 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment files (never commit secrets / API keys)
 .env
+**/.env
+!**/.env.example
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Prisma generated client
+backend/node_modules/.prisma/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

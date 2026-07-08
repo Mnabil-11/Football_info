@@ -1,0 +1,91 @@
+// Prisma schema for Football Stats Tracker (Phase 3)
+// Docs: https://www.prisma.io/docs
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters", "multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // All tables live in a dedicated `football` schema so they never collide with
+  // other applications sharing this Neon database.
+  schemas  = ["football"]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+
+  favoriteTeams   FavoriteTeam[]
+  favoritePlayers FavoritePlayer[]
+  fantasyTeams    FantasyTeam[]
+
+  @@map("users")
+  @@schema("football")
+}
+
+model FavoriteTeam {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    Int
+  teamName  String
+  teamLogo  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([userId])
+  @@map("favorite_teams")
+  @@schema("football")
+}
+
+model FavoritePlayer {
+  id          String   @id @default(cuid())
+  userId      String
+  playerId    Int
+  playerName  String
+  playerPhoto String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playerId])
+  @@index([userId])
+  @@map("favorite_players")
+  @@schema("football")
+}
+
+model FantasyTeam {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  players FantasyTeamPlayer[]
+
+  @@index([userId])
+  @@map("fantasy_teams")
+  @@schema("football")
+}
+
+model FantasyTeamPlayer {
+  id            String @id @default(cuid())
+  fantasyTeamId String
+  playerId      Int
+  position      String
+
+  fantasyTeam FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([fantasyTeamId, playerId])
+  @@index([fantasyTeamId])
+  @@map("fantasy_team_players")
+  @@schema("football")
+}
