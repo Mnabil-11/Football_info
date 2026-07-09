@@ -119,3 +119,28 @@ export interface FdTeamsResponse {
   count: number;
   teams: FdTeamRef[];
 }
+
+/* ── /matches/:id (returns the match object directly, no envelope) ──────── */
+
+export interface FdMatchDetail extends FdMatch {
+  venue?: string | null;
+  referees?: { id: number; name: string; type: string }[];
+}
+
+/* ── /persons/:id ─────────────────────────────────────────────────────────── */
+
+export interface FdPerson {
+  id: number;
+  name: string;
+  firstName: string | null;
+  lastName: string | null;
+  dateOfBirth: string | null;
+  nationality: string | null;
+  position: string | null;
+  shirtNumber: number | null;
+  currentTeam?: {
+    id: number;
+    name: string;
+    crest: string | null;
+  };
+}

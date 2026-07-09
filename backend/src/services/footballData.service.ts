@@ -4,7 +4,9 @@ import { ApiError } from '../utils/ApiError';
 import { TtlCache } from '../utils/cache';
 import {
   FdCompetitionsResponse,
+  FdMatchDetail,
   FdMatchesResponse,
+  FdPerson,
   FdScorersResponse,
   FdStandingsResponse,
   FdTeamsResponse,
@@ -89,6 +91,12 @@ export const getCompetitionMatches = (
     120_000
   );
 };
+
+export const getMatchById = (id: number): Promise<FdMatchDetail> =>
+  get<FdMatchDetail>(`/matches/${id}`, `match:${id}`, 60_000);
+
+export const getPersonById = (id: number): Promise<FdPerson> =>
+  get<FdPerson>(`/persons/${id}`, `person:${id}`, 3_600_000);
 
 export const getTeamMatches = (
   teamId: number,

@@ -16,6 +16,8 @@ const envSchema = z.object({
   FOOTBALL_DATA_KEY: z
     .string()
     .min(1, 'FOOTBALL_DATA_KEY is required'),
+  APIFOOTBALL_KEY: z.string().min(1, 'APIFOOTBALL_KEY is required'),
+  APIFOOTBALL_HOST: z.string().default('api-football-v1.p.rapidapi.com'),
   PORT: z.coerce.number().int().positive().default(4000),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   NODE_ENV: z
