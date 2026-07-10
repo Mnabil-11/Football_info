@@ -1,8 +1,11 @@
 import { RequestHandler } from 'express';
 import { z } from 'zod';
 import {
+  addFavoritePlayer,
   addFavoriteTeam,
+  listFavoritePlayers,
   listFavoriteTeams,
+  removeFavoritePlayer,
   removeFavoriteTeam,
 } from '../services/favorites.service';
 import { ApiError } from '../utils/ApiError';
@@ -11,6 +14,12 @@ const addTeamSchema = z.object({
   teamId: z.number().int().positive('معرّف الفريق غير صالح'),
   teamName: z.string().min(1, 'اسم الفريق مطلوب'),
   teamLogo: z.string().url().nullable().optional(),
+});
+
+const addPlayerSchema = z.object({
+  playerId: z.number().int().positive('معرّف اللاعب غير صالح'),
+  playerName: z.string().min(1, 'اسم اللاعب مطلوب'),
+  playerPhoto: z.string().url().nullable().optional(),
 });
 
 /** Guard: every favorites route is protected, so req.user must exist. */
@@ -49,6 +58,40 @@ export const deleteFavoriteTeam: RequestHandler = async (req, res, next) => {
   try {
     const userId = requireUserId(req.user?.id);
     await removeFavoriteTeam(userId, req.params.id);
+    res.status(200).json({ success: true, message: 'تم الحذف من المفضلة' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** GET /api/favorites/players */
+export const getFavoritePlayers: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = requireUserId(req.user?.id);
+    const players = await listFavoritePlayers(userId);
+    res.status(200).json({ success: true, data: players });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** POST /api/favorites/players */
+export const postFavoritePlayer: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = requireUserId(req.user?.id);
+    const data = addPlayerSchema.parse(req.body);
+    const created = await addFavoritePlayer(userId, data);
+    res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** DELETE /api/favorites/players/:id */
+export const deleteFavoritePlayer: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = requireUserId(req.user?.id);
+    await removeFavoritePlayer(userId, req.params.id);
     res.status(200).json({ success: true, message: 'تم الحذف من المفضلة' });
   } catch (err) {
     next(err);
