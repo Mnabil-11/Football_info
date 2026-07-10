@@ -1,6 +1,14 @@
 import { http } from './http';
 import { ApiEnvelope } from '../types/auth';
-import { Competition, Match, Scorer, Standing } from '../types/football';
+import {
+  AfPlayerResponse,
+  Competition,
+  FdPlayerResponse,
+  Match,
+  MatchDetailResponse,
+  Scorer,
+  Standing,
+} from '../types/football';
 
 /**
  * These call our backend proxy (`/api/football/*`), which talks to
@@ -64,4 +72,40 @@ export const fetchTeamMatches = async (
     { params: status ? { status } : undefined }
   );
   return data.data.matches;
+};
+
+/**
+ * Full match detail: base info from football-data.org (always present) plus
+ * best-effort API-Football enrichment (lineups/events/statistics), which is
+ * `null` when no confident cross-provider match was found.
+ */
+export const fetchMatchDetail = async (
+  matchId: number
+): Promise<MatchDetailResponse> => {
+  const { data } = await http.get<ApiEnvelope<MatchDetailResponse>>(
+    `/football/matches/${matchId}`
+  );
+  return data.data;
+};
+
+/** football-data.org player bio + best-effort API-Football stats enrichment. */
+export const fetchPlayerFd = async (
+  personId: number
+): Promise<FdPlayerResponse> => {
+  const { data } = await http.get<ApiEnvelope<FdPlayerResponse>>(
+    `/football/players/fd/${personId}`
+  );
+  return data.data;
+};
+
+/** Direct API-Football player profile + season stats. */
+export const fetchPlayerAf = async (
+  playerId: number,
+  season?: number
+): Promise<AfPlayerResponse> => {
+  const { data } = await http.get<ApiEnvelope<AfPlayerResponse>>(
+    `/football/players/af/${playerId}`,
+    { params: season ? { season } : undefined }
+  );
+  return data.data;
 };

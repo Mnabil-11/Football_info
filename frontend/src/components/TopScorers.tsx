@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchScorers } from '../api/footballApi';
 import { getBackendErrorMessage } from '../api/http';
 import { Scorer } from '../types/football';
@@ -81,7 +82,12 @@ const TopScorers = ({ code }: TopScorersProps) => {
                 {index + 1}
               </td>
               <td className="px-4 py-2">
-                <span className="font-medium text-gray-900">{s.player.name}</span>
+                <Link
+                  to={`/player/fd/${s.player.id}`}
+                  className="font-medium text-gray-900 hover:text-blue-600"
+                >
+                  {s.player.name}
+                </Link>
                 {s.player.nationality && (
                   <span className="block text-xs text-gray-400">
                     {s.player.nationality}

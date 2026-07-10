@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Match } from '../types/football';
 import { formatDate, formatTime } from '../utils/date';
 
@@ -8,7 +9,10 @@ export const isFinished = (status: string): boolean => FINISHED.has(status);
 const MatchCard = ({ match }: { match: Match }) => {
   const played = isFinished(match.status);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <Link
+      to={`/match/${match.id}`}
+      className="block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+    >
       <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
         <span>{formatDate(match.utcDate)}</span>
         {match.matchday !== null && <span>الجولة {match.matchday}</span>}
@@ -45,7 +49,7 @@ const MatchCard = ({ match }: { match: Match }) => {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

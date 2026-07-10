@@ -8,13 +8,16 @@ import {
   ReactNode,
 } from 'react';
 import {
+  addFavoritePlayerRequest,
   addFavoriteTeamRequest,
+  listFavoritePlayersRequest,
   listFavoriteTeamsRequest,
+  removeFavoritePlayerRequest,
   removeFavoriteTeamRequest,
 } from '../api/favoritesApi';
 import { getBackendErrorMessage } from '../api/http';
-import { FavoriteTeam } from '../types/auth';
-import { TeamSummary } from '../types/football';
+import { FavoritePlayer, FavoriteTeam } from '../types/auth';
+import { PlayerSummary, TeamSummary } from '../types/football';
 import { useAuth } from './AuthContext';
 
 interface FavoritesContextValue {
@@ -26,6 +29,14 @@ interface FavoritesContextValue {
   toggleFavorite: (team: TeamSummary) => Promise<void>;
   removeFavorite: (favoriteId: string) => Promise<void>;
   refresh: () => Promise<void>;
+
+  favoritePlayers: FavoritePlayer[];
+  playersLoading: boolean;
+  playersError: string | null;
+  isPlayerFavorite: (playerId: number) => boolean;
+  togglePlayerFavorite: (player: PlayerSummary) => Promise<void>;
+  removePlayerFavorite: (favoriteId: string) => Promise<void>;
+  refreshPlayers: () => Promise<void>;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(
@@ -37,6 +48,10 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   const [favorites, setFavorites] = useState<FavoriteTeam[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [favoritePlayers, setFavoritePlayers] = useState<FavoritePlayer[]>([]);
+  const [playersLoading, setPlayersLoading] = useState<boolean>(false);
+  const [playersError, setPlayersError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) {
@@ -55,10 +70,28 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isAuthenticated]);
 
+  const refreshPlayers = useCallback(async () => {
+    if (!isAuthenticated) {
+      setFavoritePlayers([]);
+      return;
+    }
+    try {
+      setPlayersLoading(true);
+      setPlayersError(null);
+      const list = await listFavoritePlayersRequest();
+      setFavoritePlayers(list);
+    } catch (err) {
+      setPlayersError(getBackendErrorMessage(err, 'تعذر تحميل مفضلة اللاعبين.'));
+    } finally {
+      setPlayersLoading(false);
+    }
+  }, [isAuthenticated]);
+
   // Load favorites whenever auth state changes.
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    void refreshPlayers();
+  }, [refresh, refreshPlayers]);
 
   const isFavorite = useCallback(
     (teamId: number): boolean =>
@@ -106,6 +139,51 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     [refresh]
   );
 
+  const isPlayerFavorite = useCallback(
+    (playerId: number): boolean =>
+      favoritePlayers.some((fav) => fav.playerId === playerId),
+    [favoritePlayers]
+  );
+
+  const togglePlayerFavorite = useCallback(
+    async (player: PlayerSummary) => {
+      const existing = favoritePlayers.find((fav) => fav.playerId === player.id);
+      if (existing) {
+        setFavoritePlayers((prev) => prev.filter((f) => f.id !== existing.id));
+        try {
+          await removeFavoritePlayerRequest(existing.id);
+        } catch (err) {
+          await refreshPlayers();
+          throw new Error(getBackendErrorMessage(err));
+        }
+        return;
+      }
+
+      const created = await addFavoritePlayerRequest({
+        playerId: player.id,
+        playerName: player.name,
+        playerPhoto: player.photo,
+      }).catch((err: unknown) => {
+        throw new Error(getBackendErrorMessage(err));
+      });
+      setFavoritePlayers((prev) => [created, ...prev]);
+    },
+    [favoritePlayers, refreshPlayers]
+  );
+
+  const removePlayerFavorite = useCallback(
+    async (favoriteId: string) => {
+      setFavoritePlayers((prev) => prev.filter((f) => f.id !== favoriteId));
+      try {
+        await removeFavoritePlayerRequest(favoriteId);
+      } catch (err) {
+        await refreshPlayers();
+        throw new Error(getBackendErrorMessage(err));
+      }
+    },
+    [refreshPlayers]
+  );
+
   const value = useMemo<FavoritesContextValue>(
     () => ({
       favorites,
@@ -115,8 +193,30 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
       toggleFavorite,
       removeFavorite,
       refresh,
+      favoritePlayers,
+      playersLoading,
+      playersError,
+      isPlayerFavorite,
+      togglePlayerFavorite,
+      removePlayerFavorite,
+      refreshPlayers,
     }),
-    [favorites, loading, error, isFavorite, toggleFavorite, removeFavorite, refresh]
+    [
+      favorites,
+      loading,
+      error,
+      isFavorite,
+      toggleFavorite,
+      removeFavorite,
+      refresh,
+      favoritePlayers,
+      playersLoading,
+      playersError,
+      isPlayerFavorite,
+      togglePlayerFavorite,
+      removePlayerFavorite,
+      refreshPlayers,
+    ]
   );
 
   return (
