@@ -61,16 +61,20 @@ export const getCompetitions = (): Promise<FdCompetitionsResponse> =>
   // Competitions rarely change; cache for 10 minutes.
   get<FdCompetitionsResponse>('/competitions', 'competitions', 600_000);
 
+// Standings and scorers only move while matches are being played; 5 minutes
+// keeps them fresh enough while saving free-tier quota.
 export const getStandings = (code: string): Promise<FdStandingsResponse> =>
   get<FdStandingsResponse>(
     `/competitions/${code}/standings`,
-    `standings:${code}`
+    `standings:${code}`,
+    300_000
   );
 
 export const getScorers = (code: string): Promise<FdScorersResponse> =>
   get<FdScorersResponse>(
     `/competitions/${code}/scorers`,
-    `scorers:${code}`
+    `scorers:${code}`,
+    300_000
   );
 
 export const getCompetitionTeams = (code: string): Promise<FdTeamsResponse> =>

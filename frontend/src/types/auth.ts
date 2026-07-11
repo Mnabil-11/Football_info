@@ -17,6 +17,16 @@ export interface FavoriteTeam {
   createdAt: string;
 }
 
+/** A favorite-player record owned by the user. */
+export interface FavoritePlayer {
+  id: string;
+  userId: string;
+  playerId: number;
+  playerName: string;
+  playerPhoto: string | null;
+  createdAt: string;
+}
+
 /** Standard success envelope from the backend. */
 export interface ApiEnvelope<T> {
   success: boolean;

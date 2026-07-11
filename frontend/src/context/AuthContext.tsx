@@ -13,7 +13,6 @@ import {
   meRequest,
   registerRequest,
 } from '../api/authApi';
-import { tokenStore } from '../api/http';
 import { AuthUser } from '../types/auth';
 
 interface AuthContextValue {
@@ -32,22 +31,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initializing, setInitializing] = useState<boolean>(true);
 
-  // On first load, hydrate the session from a stored token (if any).
+  // On first load, hydrate the session from the httpOnly cookie (if any):
+  // /auth/me succeeds when a valid session cookie is present, 401s otherwise.
   useEffect(() => {
     let cancelled = false;
 
     const hydrate = async () => {
-      if (!tokenStore.get()) {
-        setInitializing(false);
-        return;
-      }
       try {
         const current = await meRequest();
         if (!cancelled) {
           setUser(current);
         }
       } catch {
-        tokenStore.clear();
+        // No valid session — stay logged out.
       } finally {
         if (!cancelled) {
           setInitializing(false);
@@ -62,19 +58,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { user: loggedIn, token } = await loginRequest({ email, password });
-    tokenStore.set(token);
+    const { user: loggedIn } = await loginRequest({ email, password });
     setUser(loggedIn);
   }, []);
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
-      const { user: created, token } = await registerRequest({
+      const { user: created } = await registerRequest({
         name,
         email,
         password,
       });
-      tokenStore.set(token);
       setUser(created);
     },
     []
@@ -86,7 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // Logout is best-effort; clear the client session regardless.
     } finally {
-      tokenStore.clear();
       setUser(null);
     }
   }, []);

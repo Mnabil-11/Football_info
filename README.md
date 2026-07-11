@@ -1,12 +1,23 @@
 # Football Stats Tracker ⚽
 
 A full-stack football tracker. Browse competitions and their **matches**,
-**standings**, and **top scorers**, and — once signed in — save favorite teams and
-view a favorites-only dashboard.
+**standings**, and **top scorers**; open a match for full **details** (lineups,
+events, statistics) or a player for **season stats**; and — once signed in — save
+favorite teams and players and view a favorites-only dashboard.
 
-Football data comes from [football-data.org](https://www.football-data.org/), which
-does not allow browser (CORS) requests, so **all data is fetched through the backend
-proxy** (`/api/football/*`). This also keeps the data-API key server-side.
+Football data comes from **two** providers, both proxied server-side (keys never
+reach the browser):
+- [football-data.org](https://www.football-data.org/) v4 — competitions, matches,
+  standings, scorers, and match/player bios. Reliable for the **current season**, but
+  has no lineups, goal/card events, or match statistics at any tier.
+- [API-Football](https://www.api-football.com/) (RapidAPI) — used **only** to enrich
+  a match (lineups/events/statistics) or a player (season stats), since
+  football-data.org can't provide these. There's no shared ID between the two
+  providers, so match enrichment uses **best-effort fuzzy matching** (team names +
+  date); it gracefully shows "unavailable" when no confident match is found, the key
+  isn't subscribed, or the season isn't covered by the free plan (historically capped
+  at 2021–2023) — this never breaks the page, since football-data.org's base info is
+  always shown.
 
 The UI is Arabic + RTL by default (`<html lang="ar" dir="rtl">`).
 
@@ -23,22 +34,23 @@ The UI is Arabic + RTL by default (`<html lang="ar" dir="rtl">`).
 
 ```
 Football_info/
-├── frontend/            # Vite + React app
+├── frontend/            # Vite + React (+ react-router-dom) app
 │   └── src/
 │       ├── api/         # http (backend client), footballApi, authApi, favoritesApi
-│       ├── components/  # CompetitionSelect, MatchesList, StandingsTable, TopScorers, ...
-│       ├── context/     # AuthContext, FavoritesContext
-│       ├── pages/       # Profile
+│       ├── components/  # CompetitionSelect, MatchesList, StandingsTable, TopScorers,
+│       │                # MatchCard, PitchVisualization, ...
+│       ├── context/     # AuthContext, FavoritesContext (teams + players)
+│       ├── pages/       # HomePage, Profile, MatchDetails, PlayerDetails
 │       ├── utils/       # date formatting
 │       └── types/       # football.ts, auth.ts
-├── backend/             # Express + JWT API + football-data.org proxy
+├── backend/             # Express + JWT API + football-data.org/API-Football proxy
 │   ├── prisma/          # schema.prisma, init.sql
 │   └── src/
 │       ├── config/      # env validation, prisma (Neon adapter), dbUrl
-│       ├── controllers/ # auth, favorites, football
+│       ├── controllers/ # auth, favorites, football, matchDetails, player
 │       ├── middleware/  # auth guard, error handler
 │       ├── routes/      # auth, favorites, football, index
-│       ├── services/    # auth, favorites, footballData
+│       ├── services/    # auth, favorites, footballData, apiFootball
 │       └── utils/       # jwt, password, ApiError, cache
 ├── docs/                # diagrams.md (Mermaid: use-case, class, ERD)
 └── README.md
@@ -71,7 +83,10 @@ npm run dev               # http://localhost:4000
 ```
 
 Required env (`backend/.env`): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
-`FOOTBALL_DATA_KEY`, `PORT`, `CLIENT_ORIGIN`.
+`FOOTBALL_DATA_KEY`, `APIFOOTBALL_KEY`, `APIFOOTBALL_HOST`, `PORT`, `CLIENT_ORIGIN`.
+`APIFOOTBALL_KEY` requires an active RapidAPI subscription to API-Football (the free
+Basic plan works) — without it, match/player enrichment always shows "unavailable"
+(gracefully, not an error).
 
 #### Database notes (Neon)
 
@@ -98,14 +113,21 @@ Required env (`backend/.env`): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
 | GET    | `/api/favorites/teams`     | ✅   | List favorite teams       |
 | POST   | `/api/favorites/teams`     | ✅   | Add favorite team         |
 | DELETE | `/api/favorites/teams/:id` | ✅   | Remove favorite team      |
+| GET    | `/api/favorites/players`     | ✅ | List favorite players     |
+| POST   | `/api/favorites/players`     | ✅ | Add favorite player       |
+| DELETE | `/api/favorites/players/:id` | ✅ | Remove favorite player    |
 | GET    | `/api/football/competitions`                 | — | List competitions        |
 | GET    | `/api/football/competitions/:code/standings` | — | League table             |
 | GET    | `/api/football/competitions/:code/scorers`   | — | Top scorers              |
 | GET    | `/api/football/competitions/:code/matches`   | — | Competition matches      |
 | GET    | `/api/football/teams/:id/matches`            | — | A team's matches         |
+| GET    | `/api/football/matches/:id`                  | — | Match detail + best-effort lineups/events/stats |
+| GET    | `/api/football/players/fd/:id`               | — | Player bio (football-data.org) + best-effort stats |
+| GET    | `/api/football/players/af/:id`               | — | Direct API-Football profile + season stats |
 
-The `/api/football/*` routes proxy football-data.org server-side (key stays on the
-server) and cache responses briefly to respect the free-tier rate limit (~10 req/min).
+The `/api/football/*` routes proxy football-data.org and API-Football server-side
+(keys stay on the server) and cache responses briefly to respect each provider's
+free-tier rate limits.
 
 ## Security Note
 

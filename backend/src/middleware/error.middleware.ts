@@ -47,6 +47,25 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Database unreachable / misconfigured (bad credentials, missing tables,
+  // network failure). Surface as 503 so it's clearly an infra problem, not a bug.
+  const isDbUnavailable =
+    err instanceof Prisma.PrismaClientInitializationError ||
+    err instanceof Prisma.PrismaClientRustPanicError ||
+    (err instanceof Prisma.PrismaClientKnownRequestError &&
+      (err.code === 'P2021' || err.code.startsWith('P1'))) ||
+    (err instanceof Prisma.PrismaClientUnknownRequestError &&
+      /Connection|Connector/i.test(err.message));
+  if (isDbUnavailable) {
+    // eslint-disable-next-line no-console
+    console.error('Database unavailable:', err);
+    res.status(503).json({
+      success: false,
+      message: 'قاعدة البيانات غير متاحة حالياً، حاول لاحقاً',
+    });
+    return;
+  }
+
   // JWT errors.
   if (err instanceof Error && err.name === 'JsonWebTokenError') {
     res.status(401).json({ success: false, message: 'رمز غير صالح' });

@@ -13,6 +13,9 @@ build/
 **/.env
 !**/.env.example
 
+# Local Claude Code settings (may contain API keys in permission entries)
+.claude/settings.local.json
+
 # TypeScript build info
 *.tsbuildinfo
 
@@ -27,4 +30,4 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-.claude
+backend/node_modules/.claude/
