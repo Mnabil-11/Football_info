@@ -8,9 +8,17 @@ import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 const app: Application = express();
 
 // ── Global middleware ──────────────────────────────────────────────────────
+// In development Vite may fall back to another port (5174, 5175, …) when 5173
+// is taken, so allow any localhost origin there; production stays locked to
+// CLIENT_ORIGIN.
+const corsOrigin =
+  env.NODE_ENV === 'production'
+    ? env.CLIENT_ORIGIN
+    : [env.CLIENT_ORIGIN, /^https?:\/\/localhost(:\d+)?$/];
+
 app.use(
   cors({
-    origin: env.CLIENT_ORIGIN,
+    origin: corsOrigin,
     credentials: true,
   })
 );
