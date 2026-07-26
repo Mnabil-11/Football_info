@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchCompetitionMatches } from '../api/footballApi';
+import { useMemo } from 'react';
 import { getBackendErrorMessage } from '../api/http';
 import { Match } from '../types/football';
+import { useCompetitionMatches } from '../hooks/useFootball';
 import MatchCard, { isFinished } from './MatchCard';
 import Spinner from './common/Spinner';
 import ErrorState from './common/ErrorState';
@@ -12,36 +12,12 @@ interface MatchesListProps {
 }
 
 const MatchesList = ({ code }: MatchesListProps) => {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchCompetitionMatches(code);
-        if (!cancelled) {
-          setMatches(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل المباريات.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [code, reloadKey]);
+  const {
+    data: matches = [],
+    isPending,
+    error,
+    refetch,
+  } = useCompetitionMatches(code);
 
   const { upcoming, past } = useMemo(() => {
     const up: Match[] = [];
@@ -54,11 +30,16 @@ const MatchesList = ({ code }: MatchesListProps) => {
     return { upcoming: up, past: done };
   }, [matches]);
 
-  if (loading) {
+  if (isPending) {
     return <Spinner label="جاري تحميل المباريات..." />;
   }
   if (error) {
-    return <ErrorState message={error} onRetry={() => setReloadKey((k) => k + 1)} />;
+    return (
+      <ErrorState
+        message={getBackendErrorMessage(error, 'تعذر تحميل المباريات.')}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (matches.length === 0) {
     return <EmptyState message="لا توجد مباريات لهذه المسابقة." />;

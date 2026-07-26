@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchScorers } from '../api/footballApi';
 import { getBackendErrorMessage } from '../api/http';
-import { Scorer } from '../types/football';
+import { useScorers } from '../hooks/useFootball';
 import Spinner from './common/Spinner';
 import ErrorState from './common/ErrorState';
 import EmptyState from './common/EmptyState';
@@ -12,42 +10,18 @@ interface TopScorersProps {
 }
 
 const TopScorers = ({ code }: TopScorersProps) => {
-  const [scorers, setScorers] = useState<Scorer[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
+  const { data: scorers = [], isPending, error, refetch } = useScorers(code);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchScorers(code);
-        if (!cancelled) {
-          setScorers(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل الهدافين.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [code, reloadKey]);
-
-  if (loading) {
+  if (isPending) {
     return <Spinner label="جاري تحميل الهدافين..." />;
   }
   if (error) {
-    return <ErrorState message={error} onRetry={() => setReloadKey((k) => k + 1)} />;
+    return (
+      <ErrorState
+        message={getBackendErrorMessage(error, 'تعذر تحميل الهدافين.')}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (scorers.length === 0) {
     return (

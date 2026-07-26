@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchStandings } from '../api/footballApi';
 import { getBackendErrorMessage } from '../api/http';
 import { StandingRow, teamRefToSummary } from '../types/football';
+import { useStandings } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import Spinner from './common/Spinner';
@@ -18,37 +17,7 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
   const { isAuthenticated } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const [rows, setRows] = useState<StandingRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const standings = await fetchStandings(code);
-        const total = standings.find((s) => s.type === 'TOTAL') ?? standings[0];
-        if (!cancelled) {
-          setRows(total ? total.table : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل جدول الترتيب.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [code, reloadKey]);
+  const { data: rows = [], isPending, error, refetch } = useStandings(code);
 
   const handleFavorite = (row: StandingRow) => {
     if (!isAuthenticated) {
@@ -58,11 +27,16 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
     void toggleFavorite(teamRefToSummary(row.team));
   };
 
-  if (loading) {
+  if (isPending) {
     return <Spinner label="جاري تحميل الترتيب..." />;
   }
   if (error) {
-    return <ErrorState message={error} onRetry={() => setReloadKey((k) => k + 1)} />;
+    return (
+      <ErrorState
+        message={getBackendErrorMessage(error, 'تعذر تحميل جدول الترتيب.')}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (rows.length === 0) {
     return <EmptyState message="لا يوجد جدول ترتيب متاح بعد." icon="📊" />;

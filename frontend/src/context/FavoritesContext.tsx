@@ -2,11 +2,10 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
   ReactNode,
 } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addFavoritePlayerRequest,
   addFavoriteTeamRequest,
@@ -15,7 +14,6 @@ import {
   removeFavoritePlayerRequest,
   removeFavoriteTeamRequest,
 } from '../api/favoritesApi';
-import { getBackendErrorMessage } from '../api/http';
 import { FavoritePlayer, FavoriteTeam } from '../types/auth';
 import { PlayerSummary, TeamSummary } from '../types/football';
 import { useAuth } from './AuthContext';
@@ -43,100 +41,30 @@ const FavoritesContext = createContext<FavoritesContextValue | undefined>(
   undefined
 );
 
+const teamsKey = ['favorites', 'teams'] as const;
+const playersKey = ['favorites', 'players'] as const;
+
 export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAuth();
-  const [favorites, setFavorites] = useState<FavoriteTeam[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const [favoritePlayers, setFavoritePlayers] = useState<FavoritePlayer[]>([]);
-  const [playersLoading, setPlayersLoading] = useState<boolean>(false);
-  const [playersError, setPlayersError] = useState<string | null>(null);
+  const teamsQuery = useQuery({
+    queryKey: teamsKey,
+    queryFn: listFavoriteTeamsRequest,
+    enabled: isAuthenticated,
+  });
+  const favorites = isAuthenticated ? teamsQuery.data ?? [] : [];
 
-  const refresh = useCallback(async () => {
-    if (!isAuthenticated) {
-      setFavorites([]);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
-      const list = await listFavoriteTeamsRequest();
-      setFavorites(list);
-    } catch (err) {
-      setError(getBackendErrorMessage(err, 'تعذر تحميل المفضلة.'));
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  const refreshPlayers = useCallback(async () => {
-    if (!isAuthenticated) {
-      setFavoritePlayers([]);
-      return;
-    }
-    try {
-      setPlayersLoading(true);
-      setPlayersError(null);
-      const list = await listFavoritePlayersRequest();
-      setFavoritePlayers(list);
-    } catch (err) {
-      setPlayersError(getBackendErrorMessage(err, 'تعذر تحميل مفضلة اللاعبين.'));
-    } finally {
-      setPlayersLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  // Load favorites whenever auth state changes.
-  useEffect(() => {
-    void refresh();
-    void refreshPlayers();
-  }, [refresh, refreshPlayers]);
+  const playersQuery = useQuery({
+    queryKey: playersKey,
+    queryFn: listFavoritePlayersRequest,
+    enabled: isAuthenticated,
+  });
+  const favoritePlayers = isAuthenticated ? playersQuery.data ?? [] : [];
 
   const isFavorite = useCallback(
-    (teamId: number): boolean =>
-      favorites.some((fav) => fav.teamId === teamId),
+    (teamId: number): boolean => favorites.some((fav) => fav.teamId === teamId),
     [favorites]
-  );
-
-  const toggleFavorite = useCallback(
-    async (team: TeamSummary) => {
-      const existing = favorites.find((fav) => fav.teamId === team.id);
-      if (existing) {
-        // Optimistic remove.
-        setFavorites((prev) => prev.filter((f) => f.id !== existing.id));
-        try {
-          await removeFavoriteTeamRequest(existing.id);
-        } catch (err) {
-          await refresh();
-          throw new Error(getBackendErrorMessage(err));
-        }
-        return;
-      }
-
-      const created = await addFavoriteTeamRequest({
-        teamId: team.id,
-        teamName: team.name,
-        teamLogo: team.logo,
-      }).catch((err: unknown) => {
-        throw new Error(getBackendErrorMessage(err));
-      });
-      setFavorites((prev) => [created, ...prev]);
-    },
-    [favorites, refresh]
-  );
-
-  const removeFavorite = useCallback(
-    async (favoriteId: string) => {
-      setFavorites((prev) => prev.filter((f) => f.id !== favoriteId));
-      try {
-        await removeFavoriteTeamRequest(favoriteId);
-      } catch (err) {
-        await refresh();
-        throw new Error(getBackendErrorMessage(err));
-      }
-    },
-    [refresh]
   );
 
   const isPlayerFavorite = useCallback(
@@ -145,57 +73,155 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     [favoritePlayers]
   );
 
+  // Add and remove share one mutation per resource: an optimistic cache
+  // update in `onMutate`, with `onError` rolling back to the snapshot and
+  // `onSettled` refetching to reconcile with the server either way.
+  const addTeamMutation = useMutation({
+    mutationFn: addFavoriteTeamRequest,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: teamsKey });
+      return { previous: queryClient.getQueryData<FavoriteTeam[]>(teamsKey) };
+    },
+    onError: (_err, _vars, context) => {
+      if (context) {
+        queryClient.setQueryData(teamsKey, context.previous);
+      }
+    },
+    onSuccess: (created) => {
+      queryClient.setQueryData<FavoriteTeam[]>(teamsKey, (prev) => [
+        created,
+        ...(prev ?? []),
+      ]);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: teamsKey });
+    },
+  });
+
+  const removeTeamMutation = useMutation({
+    mutationFn: removeFavoriteTeamRequest,
+    onMutate: async (favoriteId: string) => {
+      await queryClient.cancelQueries({ queryKey: teamsKey });
+      const previous = queryClient.getQueryData<FavoriteTeam[]>(teamsKey);
+      queryClient.setQueryData<FavoriteTeam[]>(teamsKey, (prev) =>
+        (prev ?? []).filter((f) => f.id !== favoriteId)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context) {
+        queryClient.setQueryData(teamsKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: teamsKey });
+    },
+  });
+
+  const addPlayerMutation = useMutation({
+    mutationFn: addFavoritePlayerRequest,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: playersKey });
+      return { previous: queryClient.getQueryData<FavoritePlayer[]>(playersKey) };
+    },
+    onError: (_err, _vars, context) => {
+      if (context) {
+        queryClient.setQueryData(playersKey, context.previous);
+      }
+    },
+    onSuccess: (created) => {
+      queryClient.setQueryData<FavoritePlayer[]>(playersKey, (prev) => [
+        created,
+        ...(prev ?? []),
+      ]);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: playersKey });
+    },
+  });
+
+  const removePlayerMutation = useMutation({
+    mutationFn: removeFavoritePlayerRequest,
+    onMutate: async (favoriteId: string) => {
+      await queryClient.cancelQueries({ queryKey: playersKey });
+      const previous = queryClient.getQueryData<FavoritePlayer[]>(playersKey);
+      queryClient.setQueryData<FavoritePlayer[]>(playersKey, (prev) =>
+        (prev ?? []).filter((f) => f.id !== favoriteId)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context) {
+        queryClient.setQueryData(playersKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: playersKey });
+    },
+  });
+
+  const toggleFavorite = useCallback(
+    async (team: TeamSummary) => {
+      const existing = favorites.find((fav) => fav.teamId === team.id);
+      if (existing) {
+        await removeTeamMutation.mutateAsync(existing.id);
+        return;
+      }
+      await addTeamMutation.mutateAsync({
+        teamId: team.id,
+        teamName: team.name,
+        teamLogo: team.logo,
+      });
+    },
+    [favorites, addTeamMutation, removeTeamMutation]
+  );
+
+  const removeFavorite = useCallback(
+    (favoriteId: string) => removeTeamMutation.mutateAsync(favoriteId),
+    [removeTeamMutation]
+  );
+
   const togglePlayerFavorite = useCallback(
     async (player: PlayerSummary) => {
       const existing = favoritePlayers.find((fav) => fav.playerId === player.id);
       if (existing) {
-        setFavoritePlayers((prev) => prev.filter((f) => f.id !== existing.id));
-        try {
-          await removeFavoritePlayerRequest(existing.id);
-        } catch (err) {
-          await refreshPlayers();
-          throw new Error(getBackendErrorMessage(err));
-        }
+        await removePlayerMutation.mutateAsync(existing.id);
         return;
       }
-
-      const created = await addFavoritePlayerRequest({
+      await addPlayerMutation.mutateAsync({
         playerId: player.id,
         playerName: player.name,
         playerPhoto: player.photo,
-      }).catch((err: unknown) => {
-        throw new Error(getBackendErrorMessage(err));
       });
-      setFavoritePlayers((prev) => [created, ...prev]);
     },
-    [favoritePlayers, refreshPlayers]
+    [favoritePlayers, addPlayerMutation, removePlayerMutation]
   );
 
   const removePlayerFavorite = useCallback(
-    async (favoriteId: string) => {
-      setFavoritePlayers((prev) => prev.filter((f) => f.id !== favoriteId));
-      try {
-        await removeFavoritePlayerRequest(favoriteId);
-      } catch (err) {
-        await refreshPlayers();
-        throw new Error(getBackendErrorMessage(err));
-      }
-    },
-    [refreshPlayers]
+    (favoriteId: string) => removePlayerMutation.mutateAsync(favoriteId),
+    [removePlayerMutation]
   );
+
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: teamsKey });
+  }, [queryClient]);
+
+  const refreshPlayers = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: playersKey });
+  }, [queryClient]);
 
   const value = useMemo<FavoritesContextValue>(
     () => ({
       favorites,
-      loading,
-      error,
+      loading: teamsQuery.isPending && isAuthenticated,
+      error: teamsQuery.error ? 'تعذر تحميل المفضلة.' : null,
       isFavorite,
       toggleFavorite,
       removeFavorite,
       refresh,
       favoritePlayers,
-      playersLoading,
-      playersError,
+      playersLoading: playersQuery.isPending && isAuthenticated,
+      playersError: playersQuery.error ? 'تعذر تحميل مفضلة اللاعبين.' : null,
       isPlayerFavorite,
       togglePlayerFavorite,
       removePlayerFavorite,
@@ -203,15 +229,16 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     }),
     [
       favorites,
-      loading,
-      error,
+      teamsQuery.isPending,
+      teamsQuery.error,
+      isAuthenticated,
       isFavorite,
       toggleFavorite,
       removeFavorite,
       refresh,
       favoritePlayers,
-      playersLoading,
-      playersError,
+      playersQuery.isPending,
+      playersQuery.error,
       isPlayerFavorite,
       togglePlayerFavorite,
       removePlayerFavorite,

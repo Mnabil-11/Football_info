@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchCompetitions } from '../api/footballApi';
+import { useState } from 'react';
 import { getBackendErrorMessage } from '../api/http';
-import { Competition } from '../types/football';
+import { useCompetitions } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import CompetitionSelect from '../components/CompetitionSelect';
 import MatchesList from '../components/MatchesList';
@@ -26,42 +25,20 @@ interface HomePageProps {
 const HomePage = ({ onRequireAuth }: HomePageProps) => {
   const { isAuthenticated } = useAuth();
 
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [code, setCode] = useState<string>('');
-  const [loadingComps, setLoadingComps] = useState<boolean>(true);
-  const [compError, setCompError] = useState<string | null>(null);
+  const {
+    data: competitions = [],
+    isPending: loadingComps,
+    error: compError,
+    refetch: refetchCompetitions,
+  } = useCompetitions();
 
+  // `null` means "nothing picked yet" — we fall back to the first competition
+  // rather than storing it, so no effect is needed to sync the two.
+  const [pickedCode, setPickedCode] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('matches');
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
-  const [reloadKey, setReloadKey] = useState<number>(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoadingComps(true);
-        setCompError(null);
-        const comps = await fetchCompetitions();
-        if (!cancelled) {
-          setCompetitions(comps);
-          setCode((prev) => prev || comps[0]?.code || '');
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setCompError(getBackendErrorMessage(err, 'تعذر تحميل المسابقات.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingComps(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
+  const code = pickedCode ?? competitions[0]?.code ?? '';
   const selected = competitions.find((c) => c.code === code);
 
   return (
@@ -78,7 +55,7 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
             <CompetitionSelect
               competitions={competitions}
               value={code}
-              onChange={setCode}
+              onChange={setPickedCode}
             />
           )}
         </div>
@@ -103,7 +80,10 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
       ) : loadingComps ? (
         <Spinner label="جاري تحميل المسابقات..." fullScreen />
       ) : compError ? (
-        <ErrorState message={compError} onRetry={() => setReloadKey((k) => k + 1)} />
+        <ErrorState
+          message={getBackendErrorMessage(compError, 'تعذر تحميل المسابقات.')}
+          onRetry={() => void refetchCompetitions()}
+        />
       ) : !selected ? (
         <ErrorState message="لا توجد مسابقات متاحة." />
       ) : (

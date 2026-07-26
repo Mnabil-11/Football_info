@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchPlayerAf, fetchPlayerFd } from '../api/footballApi';
 import { getBackendErrorMessage } from '../api/http';
 import { AfPlayerStatsEntry, FdPlayerProfile } from '../types/football';
+import { usePlayerAf, usePlayerFd } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import StatCard from '../components/common/StatCard';
@@ -35,43 +34,27 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
   const { isAuthenticated } = useAuth();
   const { isPlayerFavorite, togglePlayerFavorite } = useFavorites();
 
-  const [data, setData] = useState<PageData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
+  // Both hooks always run (hook order must stay stable) but only the one
+  // matching the route's provider is enabled.
+  const isAf = provider === 'af';
+  const fdQuery = usePlayerFd(playerId, !isAf);
+  const afQuery = usePlayerAf(playerId, isAf);
+  const active = isAf ? afQuery : fdQuery;
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        if (provider === 'af') {
-          const { profile } = await fetchPlayerAf(playerId);
-          if (!cancelled) {
-            setData({ provider: 'af', profile });
-          }
-        } else {
-          const { profile, statsEnrichment } = await fetchPlayerFd(playerId);
-          if (!cancelled) {
-            setData({ provider: 'fd', profile, stats: statsEnrichment });
-          }
+  const data: PageData | null = isAf
+    ? afQuery.data
+      ? { provider: 'af', profile: afQuery.data.profile }
+      : null
+    : fdQuery.data
+      ? {
+          provider: 'fd',
+          profile: fdQuery.data.profile,
+          stats: fdQuery.data.statsEnrichment,
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل بيانات اللاعب.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [provider, playerId, reloadKey]);
+      : null;
+
+  const loading = active.isPending;
+  const error = active.error;
 
   if (!Number.isInteger(playerId) || playerId <= 0 || (provider !== 'fd' && provider !== 'af')) {
     return <ErrorState message="معرّف اللاعب غير صالح." />;
@@ -82,8 +65,8 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
   if (error || !data) {
     return (
       <ErrorState
-        message={error ?? 'تعذر تحميل اللاعب.'}
-        onRetry={() => setReloadKey((k) => k + 1)}
+        message={getBackendErrorMessage(error, 'تعذر تحميل اللاعب.')}
+        onRetry={() => void active.refetch()}
       />
     );
   }

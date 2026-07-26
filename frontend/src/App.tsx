@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
 import HomePage from './pages/HomePage';
-import Profile from './pages/Profile';
-import MatchDetails from './pages/MatchDetails';
-import PlayerDetails from './pages/PlayerDetails';
+import Spinner from './components/common/Spinner';
+import EmptyState from './components/common/EmptyState';
+
+// Split off routes that aren't needed on first paint — the home page (the
+// most common entry point) no longer pulls their code into the main bundle.
+const Profile = lazy(() => import('./pages/Profile'));
+const MatchDetails = lazy(() => import('./pages/MatchDetails'));
+const PlayerDetails = lazy(() => import('./pages/PlayerDetails'));
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -56,18 +61,26 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <Routes>
-          <Route path="/" element={<HomePage onRequireAuth={() => setAuthOpen(true)} />} />
-          <Route path="/profile" element={<Profile onBack={() => navigate('/')} />} />
-          <Route
-            path="/match/:id"
-            element={<MatchDetails onRequireAuth={() => setAuthOpen(true)} />}
-          />
-          <Route
-            path="/player/:provider/:id"
-            element={<PlayerDetails onRequireAuth={() => setAuthOpen(true)} />}
-          />
-        </Routes>
+        <Suspense fallback={<Spinner label="جاري التحميل..." fullScreen />}>
+          <Routes>
+            <Route path="/" element={<HomePage onRequireAuth={() => setAuthOpen(true)} />} />
+            <Route path="/profile" element={<Profile onBack={() => navigate('/')} />} />
+            <Route
+              path="/match/:id"
+              element={<MatchDetails onRequireAuth={() => setAuthOpen(true)} />}
+            />
+            <Route
+              path="/player/:provider/:id"
+              element={<PlayerDetails onRequireAuth={() => setAuthOpen(true)} />}
+            />
+            <Route
+              path="*"
+              element={
+                <EmptyState message="الصفحة غير موجودة." icon="🔍" />
+              }
+            />
+          </Routes>
+        </Suspense>
       </main>
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}

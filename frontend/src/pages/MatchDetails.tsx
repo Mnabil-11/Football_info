@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchMatchDetail } from '../api/footballApi';
 import { getBackendErrorMessage } from '../api/http';
-import { MatchDetailResponse, teamRefToSummary } from '../types/football';
+import { teamRefToSummary } from '../types/football';
+import { useMatchDetail } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { isFinished } from '../components/MatchCard';
@@ -37,36 +37,12 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
   const { isAuthenticated } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const [data, setData] = useState<MatchDetailResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await fetchMatchDetail(matchId);
-        if (!cancelled) {
-          setData(result);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل تفاصيل المباراة.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [matchId, reloadKey]);
+  const {
+    data,
+    isPending: loading,
+    error,
+    refetch,
+  } = useMatchDetail(matchId);
 
   const sortedEvents = useMemo(
     () =>
@@ -87,8 +63,8 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
   if (error || !data) {
     return (
       <ErrorState
-        message={error ?? 'تعذر تحميل المباراة.'}
-        onRetry={() => setReloadKey((k) => k + 1)}
+        message={getBackendErrorMessage(error, 'تعذر تحميل المباراة.')}
+        onRetry={() => void refetch()}
       />
     );
   }

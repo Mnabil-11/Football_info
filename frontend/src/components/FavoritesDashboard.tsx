@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
-import { fetchTeamMatches } from '../api/footballApi';
+import { useMemo } from 'react';
 import { getBackendErrorMessage } from '../api/http';
-import { Match } from '../types/football';
 import { FavoriteTeam } from '../types/auth';
+import { useTeamMatches } from '../hooks/useFootball';
 import { useFavorites } from '../context/FavoritesContext';
 import MatchCard from './MatchCard';
 import Spinner from './common/Spinner';
@@ -11,38 +10,15 @@ import EmptyState from './common/EmptyState';
 
 /** One favorite team's recent + upcoming matches. */
 const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isPending, error } = useTeamMatches(team.teamId);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchTeamMatches(team.teamId);
-        if (!cancelled) {
-          const sorted = [...data].sort(
-            (a, b) => +new Date(a.utcDate) - +new Date(b.utcDate)
-          );
-          setMatches(sorted.slice(0, 6));
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(getBackendErrorMessage(err, 'تعذر تحميل مباريات الفريق.'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [team.teamId]);
+  const matches = useMemo(
+    () =>
+      [...(data ?? [])]
+        .sort((a, b) => +new Date(a.utcDate) - +new Date(b.utcDate))
+        .slice(0, 6),
+    [data]
+  );
 
   return (
     <section>
@@ -52,10 +28,12 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
         )}
         <h3 className="text-lg font-bold text-gray-900">{team.teamName}</h3>
       </div>
-      {loading ? (
+      {isPending ? (
         <Spinner />
       ) : error ? (
-        <ErrorState message={error} />
+        <ErrorState
+          message={getBackendErrorMessage(error, 'تعذر تحميل مباريات الفريق.')}
+        />
       ) : matches.length === 0 ? (
         <EmptyState message="لا توجد مباريات." />
       ) : (
