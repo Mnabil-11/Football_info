@@ -53,14 +53,20 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     queryFn: listFavoriteTeamsRequest,
     enabled: isAuthenticated,
   });
-  const favorites = isAuthenticated ? teamsQuery.data ?? [] : [];
+  const favorites = useMemo(
+    () => (isAuthenticated ? teamsQuery.data ?? [] : []),
+    [isAuthenticated, teamsQuery.data]
+  );
 
   const playersQuery = useQuery({
     queryKey: playersKey,
     queryFn: listFavoritePlayersRequest,
     enabled: isAuthenticated,
   });
-  const favoritePlayers = isAuthenticated ? playersQuery.data ?? [] : [];
+  const favoritePlayers = useMemo(
+    () => (isAuthenticated ? playersQuery.data ?? [] : []),
+    [isAuthenticated, playersQuery.data]
+  );
 
   const isFavorite = useCallback(
     (teamId: number): boolean => favorites.some((fav) => fav.teamId === teamId),
