@@ -116,7 +116,7 @@ const PitchVisualization = ({ home, away }: PitchVisualizationProps) => {
           ) : null;
         })}
       </svg>
-      <div className="mt-2 flex items-center justify-center gap-6 text-xs text-gray-600">
+      <div className="mt-2 flex items-center justify-center gap-6 text-xs text-gray-600 dark:text-gray-400">
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-full bg-blue-700" /> {home.team.name}
           {home.formation ? ` (${home.formation})` : ''}

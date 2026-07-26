@@ -3,18 +3,43 @@ import { Match } from '../types/football';
 import { formatDate, formatTime } from '../utils/date';
 
 const FINISHED = new Set(['FINISHED', 'AWARDED']);
+const LIVE = new Set(['IN_PLAY', 'PAUSED']);
 
 export const isFinished = (status: string): boolean => FINISHED.has(status);
+export const isLive = (status: string): boolean => LIVE.has(status);
 
-const MatchCard = ({ match }: { match: Match }) => {
+const LiveBadge = () => (
+  <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600 dark:bg-red-950/50 dark:text-red-400">
+    <span className="relative flex h-1.5 w-1.5">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-600" />
+    </span>
+    مباشر
+  </span>
+);
+
+interface MatchCardProps {
+  match: Match;
+  /** Hide the date, e.g. when the card is already under a per-day heading. */
+  showDate?: boolean;
+}
+
+const MatchCard = ({ match, showDate = true }: MatchCardProps) => {
   const played = isFinished(match.status);
+  const live = isLive(match.status);
   return (
     <Link
       to={`/match/${match.id}`}
-      className="block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+      className="block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
     >
-      <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
-        <span>{formatDate(match.utcDate)}</span>
+      <div className="mb-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        {live ? (
+          <LiveBadge />
+        ) : showDate ? (
+          <span>{formatDate(match.utcDate)}</span>
+        ) : (
+          <span />
+        )}
         {match.matchday !== null && <span>الجولة {match.matchday}</span>}
       </div>
 
@@ -23,18 +48,18 @@ const MatchCard = ({ match }: { match: Match }) => {
           {match.homeTeam.crest && (
             <img src={match.homeTeam.crest} alt={match.homeTeam.name} className="h-10 w-10 object-contain" loading="lazy" />
           )}
-          <span className="line-clamp-1 text-center text-xs font-medium">
+          <span className="line-clamp-1 text-center text-xs font-medium dark:text-gray-200">
             {match.homeTeam.shortName ?? match.homeTeam.name}
           </span>
         </div>
 
         <div className="flex flex-col items-center px-2">
-          {played ? (
-            <span className="text-xl font-bold text-gray-900">
+          {played || live ? (
+            <span className={`text-xl font-bold ${live ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
               {match.score.fullTime.home ?? 0} - {match.score.fullTime.away ?? 0}
             </span>
           ) : (
-            <span className="text-sm font-semibold text-blue-600">
+            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
               {formatTime(match.utcDate)}
             </span>
           )}
@@ -44,7 +69,7 @@ const MatchCard = ({ match }: { match: Match }) => {
           {match.awayTeam.crest && (
             <img src={match.awayTeam.crest} alt={match.awayTeam.name} className="h-10 w-10 object-contain" loading="lazy" />
           )}
-          <span className="line-clamp-1 text-center text-xs font-medium">
+          <span className="line-clamp-1 text-center text-xs font-medium dark:text-gray-200">
             {match.awayTeam.shortName ?? match.awayTeam.name}
           </span>
         </div>

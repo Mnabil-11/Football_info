@@ -88,8 +88,8 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
   return (
     <div>
       {/* Header: base info — always available */}
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between text-xs text-gray-500">
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="mb-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <span>{formatDateTime(match.utcDate)}</span>
           <span>{match.competition?.name}</span>
         </div>
@@ -99,7 +99,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             {match.homeTeam.crest && (
               <img src={match.homeTeam.crest} alt={match.homeTeam.name} className="h-16 w-16 object-contain" />
             )}
-            <span className="text-center font-semibold text-gray-900">
+            <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
               {match.homeTeam.name}
             </span>
             <button
@@ -114,7 +114,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
           <div className="flex flex-col items-center px-4">
             {played ? (
-              <span className="text-3xl font-extrabold text-gray-900">
+              <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
                 {match.score.fullTime.home ?? 0} - {match.score.fullTime.away ?? 0}
               </span>
             ) : (
@@ -122,9 +122,9 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
                 {formatDateTime(match.utcDate)}
               </span>
             )}
-            <span className="mt-1 text-xs text-gray-400">{match.status}</span>
+            <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">{match.status}</span>
             {match.matchday !== null && (
-              <span className="text-xs text-gray-400">الجولة {match.matchday}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">الجولة {match.matchday}</span>
             )}
           </div>
 
@@ -132,7 +132,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             {match.awayTeam.crest && (
               <img src={match.awayTeam.crest} alt={match.awayTeam.name} className="h-16 w-16 object-contain" />
             )}
-            <span className="text-center font-semibold text-gray-900">
+            <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
               {match.awayTeam.name}
             </span>
             <button
@@ -147,7 +147,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
         </div>
 
         {(match.venue || (match.referees && match.referees.length > 0)) && (
-          <div className="mt-4 flex justify-center gap-6 text-xs text-gray-500">
+          <div className="mt-4 flex justify-center gap-6 text-xs text-gray-500 dark:text-gray-400">
             {match.venue && <span>الملعب: {match.venue}</span>}
             {match.referees && match.referees.length > 0 && (
               <span>الحكم: {match.referees[0].name}</span>
@@ -168,23 +168,23 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
         <div className="mt-6 space-y-8">
           {homeLineup && awayLineup && (
             <section>
-              <h3 className="mb-4 text-lg font-bold text-gray-900">التشكيلة</h3>
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">التشكيلة</h3>
               <PitchVisualization home={homeLineup} away={awayLineup} />
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {[homeLineup, awayLineup].map((lineup) => (
-                  <div key={lineup.team.id} className="rounded-xl border border-gray-100 bg-white p-4">
-                    <h4 className="mb-2 font-semibold text-gray-900">{lineup.team.name}</h4>
+                  <div key={lineup.team.id} className="rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                    <h4 className="mb-2 font-semibold text-gray-900 dark:text-gray-100">{lineup.team.name}</h4>
                     {lineup.coach?.name && (
-                      <p className="mb-2 text-xs text-gray-500">المدرب: {lineup.coach.name}</p>
+                      <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">المدرب: {lineup.coach.name}</p>
                     )}
-                    <p className="mb-1 text-xs font-medium text-gray-400">الاحتياط</p>
+                    <p className="mb-1 text-xs font-medium text-gray-400 dark:text-gray-500">الاحتياط</p>
                     <ul className="space-y-1 text-sm">
                       {lineup.substitutes.map((entry) => (
                         <li key={entry.player.id}>
                           <Link
                             to={`/player/af/${entry.player.id}`}
-                            className="text-gray-700 hover:text-blue-600"
+                            className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                           >
                             {entry.player.number ? `#${entry.player.number} ` : ''}
                             {entry.player.name}
@@ -200,27 +200,27 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
           {sortedEvents.length > 0 && (
             <section>
-              <h3 className="mb-4 text-lg font-bold text-gray-900">الأحداث</h3>
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">الأحداث</h3>
               <ul className="space-y-2">
                 {sortedEvents.map((event, index) => (
                   <li
                     key={index}
-                    className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-2 text-sm"
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
                   >
-                    <span className="w-10 text-center font-semibold text-gray-500">
+                    <span className="w-10 text-center font-semibold text-gray-500 dark:text-gray-400">
                       {event.time.elapsed}&apos;
                     </span>
                     <span>{EVENT_ICON[event.type] ?? '•'}</span>
                     <span className="flex-1">
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
                         {event.player.name ?? '—'}
                       </span>{' '}
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-gray-400">
                         {event.detail}
                         {event.assist.name ? ` (صناعة: ${event.assist.name})` : ''}
                       </span>
                     </span>
-                    <span className="text-xs text-gray-400">{event.team.name}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{event.team.name}</span>
                   </li>
                 ))}
               </ul>
@@ -229,15 +229,15 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
           {homeStats && awayStats && (
             <section>
-              <h3 className="mb-4 text-lg font-bold text-gray-900">الإحصائيات</h3>
-              <div className="space-y-3 rounded-xl border border-gray-100 bg-white p-4">
+              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">الإحصائيات</h3>
+              <div className="space-y-3 rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 {homeStats.statistics.map((stat, index) => {
                   const awayStat = awayStats.statistics[index];
                   return (
                     <div key={stat.type} className="text-sm">
-                      <div className="mb-1 flex items-center justify-between text-gray-600">
+                      <div className="mb-1 flex items-center justify-between text-gray-600 dark:text-gray-400">
                         <span>{stat.value ?? 0}</span>
-                        <span className="text-xs text-gray-400">{stat.type}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{stat.type}</span>
                         <span>{awayStat?.value ?? 0}</span>
                       </div>
                     </div>

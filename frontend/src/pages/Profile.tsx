@@ -53,14 +53,14 @@ const Profile = ({ onBack }: ProfileProps) => {
       <button
         type="button"
         onClick={onBack}
-        className="mb-5 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+        className="mb-5 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
       >
         <span aria-hidden>→</span> العودة
       </button>
 
       {/* User card */}
-      <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
+      <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
           {user.avatar ? (
             <img src={user.avatar} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
           ) : (
@@ -68,8 +68,8 @@ const Profile = ({ onBack }: ProfileProps) => {
           )}
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
-          <p className="text-sm text-gray-500" dir="ltr">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{user.name}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400" dir="ltr">
             {user.email}
           </p>
         </div>
@@ -77,9 +77,9 @@ const Profile = ({ onBack }: ProfileProps) => {
 
       {/* Favorites */}
       <div className="mt-8">
-        <h3 className="mb-4 text-xl font-bold text-gray-900">
+        <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
           الفرق المفضلة
-          <span className="ms-2 rounded-full bg-red-100 px-2.5 py-0.5 text-sm text-red-700">
+          <span className="ms-2 rounded-full bg-red-100 px-2.5 py-0.5 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-400">
             {favorites.length}
           </span>
         </h3>
@@ -95,19 +95,19 @@ const Profile = ({ onBack }: ProfileProps) => {
             {favorites.map((fav) => (
               <div
                 key={fav.id}
-                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
                 {fav.teamLogo && (
                   <img src={fav.teamLogo} alt={fav.teamName} className="h-10 w-10 object-contain" />
                 )}
-                <span className="flex-1 font-medium text-gray-900">
+                <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
                   {fav.teamName}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemove(fav.id)}
                   disabled={removingId === fav.id}
-                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
                   aria-label="إزالة من المفضلة"
                 >
                   {removingId === fav.id ? '...' : '🗑️'}
@@ -120,9 +120,9 @@ const Profile = ({ onBack }: ProfileProps) => {
 
       {/* Favorite players */}
       <div className="mt-8">
-        <h3 className="mb-4 text-xl font-bold text-gray-900">
+        <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
           اللاعبون المفضلون
-          <span className="ms-2 rounded-full bg-red-100 px-2.5 py-0.5 text-sm text-red-700">
+          <span className="ms-2 rounded-full bg-red-100 px-2.5 py-0.5 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-400">
             {favoritePlayers.length}
           </span>
         </h3>
@@ -138,23 +138,23 @@ const Profile = ({ onBack }: ProfileProps) => {
             {favoritePlayers.map((fav) => (
               <div
                 key={fav.id}
-                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
                 {fav.playerPhoto ? (
                   <img src={fav.playerPhoto} alt={fav.playerName} className="h-10 w-10 rounded-full object-cover" />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                     {fav.playerName.charAt(0)}
                   </div>
                 )}
-                <span className="flex-1 font-medium text-gray-900">
+                <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
                   {fav.playerName}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemovePlayer(fav.id)}
                   disabled={removingPlayerId === fav.id}
-                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
                   aria-label="إزالة من المفضلة"
                 >
                   {removingPlayerId === fav.id ? '...' : '🗑️'}

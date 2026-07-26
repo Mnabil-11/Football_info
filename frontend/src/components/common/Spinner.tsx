@@ -13,7 +13,7 @@ const Spinner = ({ label, fullScreen = false }: SpinnerProps) => (
   >
     <div className="text-center">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
-      {label && <p className="mt-3 text-gray-600 text-sm">{label}</p>}
+      {label && <p className="mt-3 text-gray-600 text-sm dark:text-gray-400">{label}</p>}
     </div>
   </div>
 );

@@ -12,14 +12,14 @@ const CompetitionSelect = ({
   onChange,
 }: CompetitionSelectProps) => (
   <div className="mx-auto max-w-md">
-    <label htmlFor="competition" className="mb-1 block text-sm text-gray-600">
+    <label htmlFor="competition" className="mb-1 block text-sm text-gray-600 dark:text-gray-400">
       اختر المسابقة
     </label>
     <select
       id="competition"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none"
+      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
     >
       {competitions.map((c) => (
         <option key={c.id} value={c.code}>

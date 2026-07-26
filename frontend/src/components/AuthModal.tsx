@@ -41,17 +41,17 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
       onMouseDown={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             aria-label="إغلاق"
           >
             ✕
@@ -61,7 +61,7 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
-              <label htmlFor="name" className="mb-1 block text-sm text-gray-700">
+              <label htmlFor="name" className="mb-1 block text-sm text-gray-700 dark:text-gray-300">
                 الاسم
               </label>
               <input
@@ -70,13 +70,13 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm text-gray-700">
+            <label htmlFor="email" className="mb-1 block text-sm text-gray-700 dark:text-gray-300">
               البريد الإلكتروني
             </label>
             <input
@@ -85,13 +85,13 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               dir="ltr"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm text-gray-700">
+            <label htmlFor="password" className="mb-1 block text-sm text-gray-700 dark:text-gray-300">
               كلمة المرور
             </label>
             <input
@@ -101,13 +101,13 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               dir="ltr"
             />
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
               {error}
             </p>
           )}
@@ -125,7 +125,7 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           {mode === 'login' ? 'ليس لديك حساب؟' : 'لديك حساب بالفعل؟'}{' '}
           <button
             type="button"
@@ -133,7 +133,7 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
               setMode(mode === 'login' ? 'register' : 'login');
               setError(null);
             }}
-            className="font-medium text-blue-600 hover:text-blue-700"
+            className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             {mode === 'login' ? 'أنشئ حساباً' : 'سجّل الدخول'}
           </button>

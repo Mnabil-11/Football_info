@@ -34,9 +34,9 @@ const TopScorers = ({ code }: TopScorersProps) => {
 
   return (
     <div className="mt-6 overflow-x-auto">
-      <table className="w-full min-w-[560px] overflow-hidden rounded-xl bg-white text-sm shadow-sm">
+      <table className="w-full min-w-[560px] overflow-hidden rounded-xl bg-white text-sm shadow-sm dark:bg-gray-900">
         <thead>
-          <tr className="border-b border-gray-100 text-gray-500">
+          <tr className="border-b border-gray-100 text-gray-500 dark:border-gray-800 dark:text-gray-400">
             <th className="px-4 py-3 text-center font-medium">#</th>
             <th className="px-4 py-3 text-start font-medium">اللاعب</th>
             <th className="px-4 py-3 text-start font-medium">الفريق</th>
@@ -50,20 +50,20 @@ const TopScorers = ({ code }: TopScorersProps) => {
           {scorers.map((s, index) => (
             <tr
               key={s.player.id}
-              className="border-b border-gray-50 last:border-0 hover:bg-gray-50"
+              className="border-b border-gray-50 last:border-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/60"
             >
-              <td className="px-4 py-2 text-center font-semibold text-gray-500">
+              <td className="px-4 py-2 text-center font-semibold text-gray-500 dark:text-gray-400">
                 {index + 1}
               </td>
               <td className="px-4 py-2">
                 <Link
                   to={`/player/fd/${s.player.id}`}
-                  className="font-medium text-gray-900 hover:text-blue-600"
+                  className="font-medium text-gray-900 hover:text-blue-600 dark:text-gray-100 dark:hover:text-blue-400"
                 >
                   {s.player.name}
                 </Link>
                 {s.player.nationality && (
-                  <span className="block text-xs text-gray-400">
+                  <span className="block text-xs text-gray-400 dark:text-gray-500">
                     {s.player.nationality}
                   </span>
                 )}
@@ -73,21 +73,21 @@ const TopScorers = ({ code }: TopScorersProps) => {
                   {s.team.crest && (
                     <img src={s.team.crest} alt={s.team.name} className="h-5 w-5 object-contain" loading="lazy" />
                   )}
-                  <span className="text-gray-700">
+                  <span className="text-gray-700 dark:text-gray-300">
                     {s.team.shortName ?? s.team.name}
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-2 text-center text-gray-600">
+              <td className="px-4 py-2 text-center text-gray-600 dark:text-gray-400">
                 {s.playedMatches ?? '—'}
               </td>
-              <td className="px-4 py-2 text-center font-bold text-green-600">
+              <td className="px-4 py-2 text-center font-bold text-green-600 dark:text-green-400">
                 {s.goals ?? 0}
               </td>
-              <td className="px-4 py-2 text-center text-gray-600">
+              <td className="px-4 py-2 text-center text-gray-600 dark:text-gray-400">
                 {s.assists ?? 0}
               </td>
-              <td className="px-4 py-2 text-center text-gray-600">
+              <td className="px-4 py-2 text-center text-gray-600 dark:text-gray-400">
                 {s.penalties ?? 0}
               </td>
             </tr>

@@ -26,7 +26,7 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
         {team.teamLogo && (
           <img src={team.teamLogo} alt={team.teamName} className="h-8 w-8 object-contain" />
         )}
-        <h3 className="text-lg font-bold text-gray-900">{team.teamName}</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{team.teamName}</h3>
       </div>
       {isPending ? (
         <Spinner />

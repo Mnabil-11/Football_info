@@ -44,11 +44,11 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
   return (
     <>
       {!favoritesOnly && (
-        <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-6">
-          <h1 className="mb-1 text-center text-2xl font-bold text-gray-900">
+        <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+          <h1 className="mb-1 text-center text-2xl font-bold text-gray-900 dark:text-gray-100">
             المباريات والترتيب والهدافون
           </h1>
-          <p className="mb-5 text-center text-sm text-gray-500">
+          <p className="mb-5 text-center text-sm text-gray-500 dark:text-gray-400">
             بيانات مباشرة من football-data.org
           </p>
           {!loadingComps && !compError && competitions.length > 0 && (
@@ -63,12 +63,12 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
 
       {isAuthenticated && (
         <div className="mx-auto mb-4 flex max-w-md items-center justify-center">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <input
               type="checkbox"
               checked={favoritesOnly}
               onChange={(e) => setFavoritesOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-gray-300 dark:border-gray-700"
             />
             عرض مباريات الفرق المفضلة فقط
           </label>
@@ -94,13 +94,13 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
               <img src={selected.emblem} alt={selected.name} className="h-12 w-12 object-contain" />
             )}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{selected.name}</h2>
-              <p className="text-sm text-gray-500">{selected.area.name}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selected.name}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{selected.area.name}</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <nav className="mt-6 flex gap-2 border-b border-gray-200">
+          <nav className="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-800">
             {TABS.map((t) => (
               <button
                 key={t.key}
@@ -108,8 +108,8 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
                 onClick={() => setTab(t.key)}
                 className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                   tab === t.key
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 {t.label}

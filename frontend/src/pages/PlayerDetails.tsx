@@ -94,21 +94,21 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
 
   return (
     <div>
-      <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         {photo ? (
-          <img src={photo} alt={name} className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100" />
+          <img src={photo} alt={name} className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-800" />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
             {name.charAt(0)}
           </div>
         )}
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{name}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {position ?? statLine?.games.position ?? '—'}
             {teamName ? ` · ${teamName}` : ''}
           </p>
-          <p className="text-xs text-gray-400">{nationality ?? '—'}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{nationality ?? '—'}</p>
         </div>
         <button
           type="button"

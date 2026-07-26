@@ -6,11 +6,11 @@ interface StatCardProps {
   accent?: string;
 }
 
-const StatCard = ({ label, value, icon, accent = 'text-gray-900' }: StatCardProps) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col items-center justify-center text-center hover:shadow-md transition-shadow">
+const StatCard = ({ label, value, icon, accent = 'text-gray-900 dark:text-gray-100' }: StatCardProps) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col items-center justify-center text-center hover:shadow-md transition-shadow dark:bg-gray-900 dark:border-gray-800">
     {icon && <div className="text-2xl mb-1">{icon}</div>}
     <div className={`text-3xl font-bold ${accent}`}>{value}</div>
-    <div className="text-xs text-gray-500 mt-1">{label}</div>
+    <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">{label}</div>
   </div>
 );
 

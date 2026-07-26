@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { getBackendErrorMessage } from '../api/http';
 import { Match } from '../types/football';
+import { formatDate } from '../utils/date';
 import { useCompetitionMatches } from '../hooks/useFootball';
 import MatchCard, { isFinished } from './MatchCard';
 import Spinner from './common/Spinner';
@@ -11,6 +12,28 @@ interface MatchesListProps {
   code: string;
 }
 
+/** One heading + grid per calendar day, in the given display order. */
+interface DayGroup {
+  day: string;
+  matches: Match[];
+}
+
+const groupByDay = (matches: Match[]): DayGroup[] => {
+  const groups: DayGroup[] = [];
+  const indexByDay = new Map<string, number>();
+  for (const m of matches) {
+    const day = formatDate(m.utcDate);
+    const existingIndex = indexByDay.get(day);
+    if (existingIndex === undefined) {
+      indexByDay.set(day, groups.length);
+      groups.push({ day, matches: [m] });
+    } else {
+      groups[existingIndex].matches.push(m);
+    }
+  }
+  return groups;
+};
+
 const MatchesList = ({ code }: MatchesListProps) => {
   const {
     data: matches = [],
@@ -19,7 +42,7 @@ const MatchesList = ({ code }: MatchesListProps) => {
     refetch,
   } = useCompetitionMatches(code);
 
-  const { upcoming, past } = useMemo(() => {
+  const { upcomingByDay, pastByDay } = useMemo(() => {
     const up: Match[] = [];
     const done: Match[] = [];
     for (const m of matches) {
@@ -27,7 +50,10 @@ const MatchesList = ({ code }: MatchesListProps) => {
     }
     up.sort((a, b) => +new Date(a.utcDate) - +new Date(b.utcDate));
     done.sort((a, b) => +new Date(b.utcDate) - +new Date(a.utcDate));
-    return { upcoming: up, past: done };
+    return {
+      upcomingByDay: groupByDay(up.slice(0, 12)),
+      pastByDay: groupByDay(done.slice(0, 12)),
+    };
   }, [matches]);
 
   if (isPending) {
@@ -47,22 +73,36 @@ const MatchesList = ({ code }: MatchesListProps) => {
 
   return (
     <div className="mt-6 space-y-8">
-      {past.length > 0 && (
+      {pastByDay.length > 0 && (
         <section>
-          <h3 className="mb-4 text-lg font-bold text-gray-900">أحدث النتائج</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {past.slice(0, 12).map((m) => (
-              <MatchCard key={m.id} match={m} />
+          <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">أحدث النتائج</h3>
+          <div className="space-y-5">
+            {pastByDay.map((group) => (
+              <div key={group.day}>
+                <h4 className="mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500">{group.day}</h4>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.matches.map((m) => (
+                    <MatchCard key={m.id} match={m} showDate={false} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
       )}
-      {upcoming.length > 0 && (
+      {upcomingByDay.length > 0 && (
         <section>
-          <h3 className="mb-4 text-lg font-bold text-gray-900">المباريات القادمة</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {upcoming.slice(0, 12).map((m) => (
-              <MatchCard key={m.id} match={m} />
+          <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">المباريات القادمة</h3>
+          <div className="space-y-5">
+            {upcomingByDay.map((group) => (
+              <div key={group.day}>
+                <h4 className="mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500">{group.day}</h4>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.matches.map((m) => (
+                    <MatchCard key={m.id} match={m} showDate={false} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
