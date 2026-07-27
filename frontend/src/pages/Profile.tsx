@@ -53,7 +53,7 @@ const Profile = ({ onBack }: ProfileProps) => {
       <button
         type="button"
         onClick={onBack}
-        className="mb-5 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        className="-ms-2 mb-5 inline-flex items-center gap-1 rounded-lg px-2 py-2.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
       >
         <span aria-hidden>→</span> العودة
       </button>

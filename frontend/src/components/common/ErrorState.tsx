@@ -13,7 +13,7 @@ const ErrorState = ({ message, onRetry }: ErrorStateProps) => (
         <button
           type="button"
           onClick={onRetry}
-          className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
         >
           إعادة المحاولة
         </button>
