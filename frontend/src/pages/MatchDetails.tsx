@@ -4,6 +4,7 @@ import { getBackendErrorMessage } from '../api/http';
 import { teamRefToSummary } from '../types/football';
 import { hideOnImgError } from '../utils/img';
 import { isFinished, isLive } from '../utils/matchStatus';
+import { parseStatValue, translateStatType } from '../utils/matchStats';
 import { useMatchDetail } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -261,15 +262,25 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
           {homeStats && awayStats && (
             <section>
               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">الإحصائيات</h3>
-              <div className="space-y-3 rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+              <div className="space-y-4 rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                 {homeStats.statistics.map((stat, index) => {
                   const awayStat = awayStats.statistics[index];
+                  const homeVal = parseStatValue(stat.value);
+                  const awayVal = parseStatValue(awayStat?.value ?? null);
+                  const total = homeVal + awayVal;
+                  const homePct = total > 0 ? (homeVal / total) * 100 : 50;
                   return (
                     <div key={stat.type} className="text-sm">
-                      <div className="mb-1 flex items-center justify-between text-gray-600 dark:text-gray-400">
-                        <span>{stat.value ?? 0}</span>
-                        <span className="text-xs text-gray-400 dark:text-gray-500">{stat.type}</span>
-                        <span>{awayStat?.value ?? 0}</span>
+                      <div className="mb-1 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                        <span className="font-medium">{stat.value ?? 0}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          {translateStatType(stat.type)}
+                        </span>
+                        <span className="font-medium">{awayStat?.value ?? 0}</span>
+                      </div>
+                      <div className="flex h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div className="bg-blue-600" style={{ width: `${homePct}%` }} />
+                        <div className="bg-red-600" style={{ width: `${100 - homePct}%` }} />
                       </div>
                     </div>
                   );
