@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { SkeletonList } from '../components/common/Skeleton';
+import Avatar from '../components/common/Avatar';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
+import { hideOnImgError } from '../utils/img';
 
 interface ProfileProps {
   onBack: () => void;
@@ -60,13 +62,7 @@ const Profile = ({ onBack }: ProfileProps) => {
 
       {/* User card */}
       <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
-          ) : (
-            user.name.charAt(0).toUpperCase()
-          )}
-        </div>
+        <Avatar src={user.avatar} alt={user.name} fallbackText={user.name} size="h-16 w-16" />
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{user.name}</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400" dir="ltr">
@@ -98,7 +94,15 @@ const Profile = ({ onBack }: ProfileProps) => {
                 className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
                 {fav.teamLogo && (
-                  <img src={fav.teamLogo} alt={fav.teamName} className="h-10 w-10 object-contain" />
+                  <img
+                    src={fav.teamLogo}
+                    alt={fav.teamName}
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain"
+                    loading="lazy"
+                    onError={hideOnImgError}
+                  />
                 )}
                 <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
                   {fav.teamName}
@@ -140,13 +144,13 @@ const Profile = ({ onBack }: ProfileProps) => {
                 key={fav.id}
                 className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
-                {fav.playerPhoto ? (
-                  <img src={fav.playerPhoto} alt={fav.playerName} className="h-10 w-10 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                    {fav.playerName.charAt(0)}
-                  </div>
-                )}
+                <Avatar
+                  src={fav.playerPhoto}
+                  alt={fav.playerName}
+                  fallbackText={fav.playerName}
+                  size="h-10 w-10"
+                  textSize="text-sm"
+                />
                 <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
                   {fav.playerName}
                 </span>

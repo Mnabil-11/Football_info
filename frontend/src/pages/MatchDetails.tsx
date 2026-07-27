@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { teamRefToSummary } from '../types/football';
+import { hideOnImgError } from '../utils/img';
 import { useMatchDetail } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -115,7 +116,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-1 flex-col items-center gap-2">
             {match.homeTeam.crest && (
-              <img src={match.homeTeam.crest} alt={match.homeTeam.name} className="h-16 w-16 object-contain" />
+              <img src={match.homeTeam.crest} alt={match.homeTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
             )}
             <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
               {match.homeTeam.name}
@@ -148,7 +149,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
           <div className="flex flex-1 flex-col items-center gap-2">
             {match.awayTeam.crest && (
-              <img src={match.awayTeam.crest} alt={match.awayTeam.name} className="h-16 w-16 object-contain" />
+              <img src={match.awayTeam.crest} alt={match.awayTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
             )}
             <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
               {match.awayTeam.name}

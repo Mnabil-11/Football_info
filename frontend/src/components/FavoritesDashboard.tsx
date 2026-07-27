@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { getBackendErrorMessage } from '../api/http';
 import { FavoriteTeam } from '../types/auth';
+import { hideOnImgError } from '../utils/img';
 import { useTeamMatches } from '../hooks/useFootball';
 import { useFavorites } from '../context/FavoritesContext';
 import MatchCard from './MatchCard';
@@ -24,7 +25,15 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
     <section>
       <div className="mb-3 flex items-center gap-3">
         {team.teamLogo && (
-          <img src={team.teamLogo} alt={team.teamName} className="h-8 w-8 object-contain" />
+          <img
+            src={team.teamLogo}
+            alt={team.teamName}
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
+            loading="lazy"
+            onError={hideOnImgError}
+          />
         )}
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{team.teamName}</h3>
       </div>

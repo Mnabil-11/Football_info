@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Match } from '../types/football';
 import { formatDate, formatTime } from '../utils/date';
+import { hideOnImgError } from '../utils/img';
 
 const FINISHED = new Set(['FINISHED', 'AWARDED']);
 const LIVE = new Set(['IN_PLAY', 'PAUSED']);
@@ -46,7 +47,7 @@ const MatchCard = ({ match, showDate = true }: MatchCardProps) => {
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-1 flex-col items-center gap-1">
           {match.homeTeam.crest && (
-            <img src={match.homeTeam.crest} alt={match.homeTeam.name} className="h-10 w-10 object-contain" loading="lazy" />
+            <img src={match.homeTeam.crest} alt={match.homeTeam.name} width={40} height={40} className="h-10 w-10 object-contain" loading="lazy" onError={hideOnImgError} />
           )}
           <span className="line-clamp-1 text-center text-xs font-medium dark:text-gray-200">
             {match.homeTeam.shortName ?? match.homeTeam.name}
@@ -67,7 +68,7 @@ const MatchCard = ({ match, showDate = true }: MatchCardProps) => {
 
         <div className="flex flex-1 flex-col items-center gap-1">
           {match.awayTeam.crest && (
-            <img src={match.awayTeam.crest} alt={match.awayTeam.name} className="h-10 w-10 object-contain" loading="lazy" />
+            <img src={match.awayTeam.crest} alt={match.awayTeam.name} width={40} height={40} className="h-10 w-10 object-contain" loading="lazy" onError={hideOnImgError} />
           )}
           <span className="line-clamp-1 text-center text-xs font-medium dark:text-gray-200">
             {match.awayTeam.shortName ?? match.awayTeam.name}

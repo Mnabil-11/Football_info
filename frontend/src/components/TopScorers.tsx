@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
+import { hideOnImgError } from '../utils/img';
 import { useScorers } from '../hooks/useFootball';
 import { SkeletonTable } from './common/Skeleton';
 import ErrorState from './common/ErrorState';
@@ -71,7 +72,7 @@ const TopScorers = ({ code }: TopScorersProps) => {
               <td className="px-4 py-2">
                 <div className="flex items-center gap-2">
                   {s.team.crest && (
-                    <img src={s.team.crest} alt={s.team.name} className="h-5 w-5 object-contain" loading="lazy" />
+                    <img src={s.team.crest} alt={s.team.name} width={20} height={20} className="h-5 w-5 object-contain" loading="lazy" onError={hideOnImgError} />
                   )}
                   <span className="text-gray-700 dark:text-gray-300">
                     {s.team.shortName ?? s.team.name}

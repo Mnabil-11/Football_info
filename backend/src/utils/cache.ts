@@ -11,6 +11,11 @@ interface Entry<T> {
 
 export class TtlCache {
   private readonly store = new Map<string, Entry<unknown>>();
+  // Tracks producers currently in flight so concurrent misses for the same
+  // key share one upstream request instead of each firing their own — without
+  // this, a burst of requests for an uncached key could blow through
+  // football-data.org's ~10 req/min limit on its own.
+  private readonly inFlight = new Map<string, Promise<unknown>>();
 
   constructor(private readonly defaultTtlMs: number = 60_000) {}
 
@@ -30,7 +35,11 @@ export class TtlCache {
     this.store.set(key, { value, expiresAt: Date.now() + ttlMs });
   }
 
-  /** Return the cached value, or compute + cache it via `producer`. */
+  /**
+   * Return the cached value, or compute + cache it via `producer`. Concurrent
+   * calls for the same key while the value is still missing reuse the same
+   * in-flight producer call rather than each triggering their own.
+   */
   async wrap<T>(
     key: string,
     producer: () => Promise<T>,
@@ -40,8 +49,22 @@ export class TtlCache {
     if (cached !== undefined) {
       return cached;
     }
-    const value = await producer();
-    this.set(key, value, ttlMs);
-    return value;
+
+    const pending = this.inFlight.get(key);
+    if (pending) {
+      return pending as Promise<T>;
+    }
+
+    const promise = producer()
+      .then((value) => {
+        this.set(key, value, ttlMs);
+        return value;
+      })
+      .finally(() => {
+        this.inFlight.delete(key);
+      });
+
+    this.inFlight.set(key, promise);
+    return promise;
   }
 }

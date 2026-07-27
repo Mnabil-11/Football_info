@@ -9,6 +9,7 @@ import TopScorers from '../components/TopScorers';
 import FavoritesDashboard from '../components/FavoritesDashboard';
 import { SkeletonBox, SkeletonMatchGrid } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
+import { hideOnImgError } from '../utils/img';
 
 type Tab = 'matches' | 'standings' | 'scorers';
 
@@ -107,7 +108,14 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
           {/* Competition header */}
           <div className="flex items-center gap-3">
             {selected.emblem && (
-              <img src={selected.emblem} alt={selected.name} className="h-12 w-12 object-contain" />
+              <img
+                src={selected.emblem}
+                alt={selected.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 object-contain"
+                onError={hideOnImgError}
+              />
             )}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selected.name}</h2>
