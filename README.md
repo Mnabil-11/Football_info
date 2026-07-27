@@ -237,7 +237,16 @@ Required env (`backend/.env`):
 
 All `/api/football/*` routes proxy football-data.org and API-Football
 server-side and cache responses briefly to respect each provider's
-free-tier rate limits.
+free-tier rate limits. Every route above was verified live: correct status
+codes, response shapes, and `Cache-Control`/`RateLimit-*` headers.
+
+⚠️ **Known limitation:** `/api/football/players/af/:id` and the
+API-Football-sourced fields (`enrichment` on match details,
+`statsEnrichment` on player bios) currently return empty/`null` for
+every request — the configured API-Football key on RapidAPI isn't
+subscribed to that API (`403 You are not subscribed`). The code path
+itself is correct (verified it degrades gracefully rather than
+erroring); this needs a RapidAPI subscription to actually return data.
 
 ---
 
