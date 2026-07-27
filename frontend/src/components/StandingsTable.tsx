@@ -26,7 +26,9 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
       onRequireAuth();
       return;
     }
-    void toggleFavorite(teamRefToSummary(row.team));
+    // The optimistic cache update already rolls back visually on failure;
+    // this just prevents an unhandled promise rejection reaching the console.
+    toggleFavorite(teamRefToSummary(row.team)).catch(() => {});
   };
 
   if (isPending) {

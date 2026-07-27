@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    # Every value below is a placeholder, never a real secret: all tests mock
+    # Prisma/axios, so nothing here ever reaches a real database or API.
+    # They only need to satisfy config/env.ts's Zod schema at import time.
+    env:
+      DATABASE_URL: postgresql://user:password@localhost:5432/football_ci
+      JWT_SECRET: ci-placeholder-secret-not-for-prod
+      FOOTBALL_DATA_KEY: ci-placeholder
+      APIFOOTBALL_KEY: ci-placeholder
+      NODE_ENV: test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:4000/api

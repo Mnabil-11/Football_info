@@ -106,7 +106,9 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
       onRequireAuth();
       return;
     }
-    void togglePlayerFavorite({ id: playerId, name, photo });
+    // The optimistic cache update already rolls back visually on failure;
+    // this just prevents an unhandled promise rejection reaching the console.
+    togglePlayerFavorite({ id: playerId, name, photo }).catch(() => {});
   };
 
   return (

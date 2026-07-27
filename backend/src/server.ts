@@ -1,47 +1,33 @@
-import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import compression from 'compression';
 import { env } from './config/env';
-import apiRoutes from './routes';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { prisma } from './config/prisma';
+import app from './app';
 
-const app: Application = express();
-
-// ── Global middleware ──────────────────────────────────────────────────────
-// In development Vite may fall back to another port (5174, 5175, …) when 5173
-// is taken, so allow any localhost origin there; production stays locked to
-// CLIENT_ORIGIN.
-const corsOrigin =
-  env.NODE_ENV === 'production'
-    ? env.CLIENT_ORIGIN
-    : [env.CLIENT_ORIGIN, /^https?:\/\/localhost(:\d+)?$/];
-
-app.use(
-  cors({
-    origin: corsOrigin,
-    credentials: true,
-  })
-);
-app.use(compression());
-app.use(express.json());
-app.use(cookieParser());
-
-// ── Health check ───────────────────────────────────────────────────────────
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ success: true, status: 'ok', uptime: process.uptime() });
-});
-
-// ── API routes ─────────────────────────────────────────────────────────────
-app.use('/api', apiRoutes);
-
-// ── Error handling (must be last) ──────────────────────────────────────────
-app.use(notFoundHandler);
-app.use(errorHandler);
-
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`🚀 API listening on http://localhost:${env.PORT}`);
 });
+
+// ── Graceful shutdown ───────────────────────────────────────────────────────
+// On deploy/restart the platform sends SIGTERM; without this, in-flight
+// requests get dropped mid-response instead of finishing first.
+let shuttingDown = false;
+const shutdown = (signal: string): void => {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
+  // eslint-disable-next-line no-console
+  console.log(`${signal} received: closing server gracefully...`);
+
+  server.close(() => {
+    void prisma.$disconnect().finally(() => process.exit(0));
+  });
+
+  // Belt-and-suspenders: force-exit if close() hangs (e.g. a stuck connection).
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;

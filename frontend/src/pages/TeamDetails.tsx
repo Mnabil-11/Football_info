@@ -45,7 +45,9 @@ const TeamDetails = ({ onRequireAuth }: TeamDetailsProps) => {
       onRequireAuth();
       return;
     }
-    void toggleFavorite(teamRefToSummary(team));
+    // The optimistic cache update already rolls back visually on failure;
+    // this just prevents an unhandled promise rejection reaching the console.
+    toggleFavorite(teamRefToSummary(team)).catch(() => {});
   };
 
   if (!Number.isInteger(teamId) || teamId <= 0) {

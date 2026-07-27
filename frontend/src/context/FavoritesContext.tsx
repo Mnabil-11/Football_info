@@ -45,7 +45,7 @@ const teamsKey = ['favorites', 'teams'] as const;
 const playersKey = ['favorites', 'players'] as const;
 
 export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
 
   const teamsQuery = useQuery({
@@ -80,24 +80,33 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   );
 
   // Add and remove share one mutation per resource: an optimistic cache
-  // update in `onMutate`, with `onError` rolling back to the snapshot and
-  // `onSettled` refetching to reconcile with the server either way.
+  // update in `onMutate` (so the UI reflects the change immediately, before
+  // the server responds), with `onError` rolling back to the snapshot and
+  // `onSettled` refetching to reconcile the temporary optimistic record with
+  // the server's real one either way.
   const addTeamMutation = useMutation({
     mutationFn: addFavoriteTeamRequest,
-    onMutate: async () => {
+    onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: teamsKey });
-      return { previous: queryClient.getQueryData<FavoriteTeam[]>(teamsKey) };
+      const previous = queryClient.getQueryData<FavoriteTeam[]>(teamsKey);
+      const optimistic: FavoriteTeam = {
+        id: `optimistic-${variables.teamId}`,
+        userId: user?.id ?? '',
+        teamId: variables.teamId,
+        teamName: variables.teamName,
+        teamLogo: variables.teamLogo ?? null,
+        createdAt: new Date().toISOString(),
+      };
+      queryClient.setQueryData<FavoriteTeam[]>(teamsKey, (prev) => [
+        optimistic,
+        ...(prev ?? []),
+      ]);
+      return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context) {
         queryClient.setQueryData(teamsKey, context.previous);
       }
-    },
-    onSuccess: (created) => {
-      queryClient.setQueryData<FavoriteTeam[]>(teamsKey, (prev) => [
-        created,
-        ...(prev ?? []),
-      ]);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: teamsKey });
@@ -126,20 +135,27 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
 
   const addPlayerMutation = useMutation({
     mutationFn: addFavoritePlayerRequest,
-    onMutate: async () => {
+    onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: playersKey });
-      return { previous: queryClient.getQueryData<FavoritePlayer[]>(playersKey) };
+      const previous = queryClient.getQueryData<FavoritePlayer[]>(playersKey);
+      const optimistic: FavoritePlayer = {
+        id: `optimistic-${variables.playerId}`,
+        userId: user?.id ?? '',
+        playerId: variables.playerId,
+        playerName: variables.playerName,
+        playerPhoto: variables.playerPhoto ?? null,
+        createdAt: new Date().toISOString(),
+      };
+      queryClient.setQueryData<FavoritePlayer[]>(playersKey, (prev) => [
+        optimistic,
+        ...(prev ?? []),
+      ]);
+      return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context) {
         queryClient.setQueryData(playersKey, context.previous);
       }
-    },
-    onSuccess: (created) => {
-      queryClient.setQueryData<FavoritePlayer[]>(playersKey, (prev) => [
-        created,
-        ...(prev ?? []),
-      ]);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: playersKey });

@@ -99,7 +99,9 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
       onRequireAuth();
       return;
     }
-    void toggleFavorite(teamRefToSummary(team));
+    // The optimistic cache update already rolls back visually on failure;
+    // this just prevents an unhandled promise rejection reaching the console.
+    toggleFavorite(teamRefToSummary(team)).catch(() => {});
   };
 
   const homeLineup = enrichment?.lineups.find((l) => l.team.id === match.homeTeam.id);
