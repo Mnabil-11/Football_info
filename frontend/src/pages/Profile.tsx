@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
-import Spinner from '../components/common/Spinner';
+import { SkeletonList } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
 
@@ -85,7 +85,7 @@ const Profile = ({ onBack }: ProfileProps) => {
         </h3>
 
         {loading ? (
-          <Spinner label="جاري تحميل المفضلة..." />
+          <SkeletonList />
         ) : error ? (
           <ErrorState message={error} onRetry={refresh} />
         ) : favorites.length === 0 ? (
@@ -107,7 +107,7 @@ const Profile = ({ onBack }: ProfileProps) => {
                   type="button"
                   onClick={() => handleRemove(fav.id)}
                   disabled={removingId === fav.id}
-                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                  className="-m-2 p-2 text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
                   aria-label="إزالة من المفضلة"
                 >
                   {removingId === fav.id ? '...' : '🗑️'}
@@ -128,7 +128,7 @@ const Profile = ({ onBack }: ProfileProps) => {
         </h3>
 
         {playersLoading ? (
-          <Spinner label="جاري تحميل المفضلة..." />
+          <SkeletonList />
         ) : playersError ? (
           <ErrorState message={playersError} onRetry={refreshPlayers} />
         ) : favoritePlayers.length === 0 ? (
@@ -154,7 +154,7 @@ const Profile = ({ onBack }: ProfileProps) => {
                   type="button"
                   onClick={() => handleRemovePlayer(fav.id)}
                   disabled={removingPlayerId === fav.id}
-                  className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                  className="-m-2 p-2 text-sm text-red-500 hover:text-red-700 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
                   aria-label="إزالة من المفضلة"
                 >
                   {removingPlayerId === fav.id ? '...' : '🗑️'}

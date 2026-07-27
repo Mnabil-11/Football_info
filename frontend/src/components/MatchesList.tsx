@@ -4,7 +4,7 @@ import { Match } from '../types/football';
 import { formatDate } from '../utils/date';
 import { useCompetitionMatches } from '../hooks/useFootball';
 import MatchCard, { isFinished } from './MatchCard';
-import Spinner from './common/Spinner';
+import { SkeletonMatchGrid } from './common/Skeleton';
 import ErrorState from './common/ErrorState';
 import EmptyState from './common/EmptyState';
 
@@ -57,7 +57,11 @@ const MatchesList = ({ code }: MatchesListProps) => {
   }, [matches]);
 
   if (isPending) {
-    return <Spinner label="جاري تحميل المباريات..." />;
+    return (
+      <div className="mt-6">
+        <SkeletonMatchGrid />
+      </div>
+    );
   }
   if (error) {
     return (

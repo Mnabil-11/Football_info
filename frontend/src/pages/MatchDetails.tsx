@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { isFinished } from '../components/MatchCard';
 import PitchVisualization from '../components/PitchVisualization';
-import Spinner from '../components/common/Spinner';
+import { SkeletonBox } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
 
@@ -58,7 +58,25 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
     return <ErrorState message="معرّف المباراة غير صالح." />;
   }
   if (loading) {
-    return <Spinner label="جاري تحميل تفاصيل المباراة..." fullScreen />;
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="mb-4 flex items-center justify-between">
+          <SkeletonBox className="h-3 w-24" />
+          <SkeletonBox className="h-3 w-32" />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-1 flex-col items-center gap-2">
+            <SkeletonBox className="h-16 w-16 rounded-full" />
+            <SkeletonBox className="h-4 w-20" />
+          </div>
+          <SkeletonBox className="h-8 w-16" />
+          <div className="flex flex-1 flex-col items-center gap-2">
+            <SkeletonBox className="h-16 w-16 rounded-full" />
+            <SkeletonBox className="h-4 w-20" />
+          </div>
+        </div>
+      </div>
+    );
   }
   if (error || !data) {
     return (
@@ -105,7 +123,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             <button
               type="button"
               onClick={() => handleFavoriteTeam(match.homeTeam)}
-              className="text-lg"
+              className="-m-2 p-2 text-lg"
               aria-label="إضافة إلى المفضلة"
             >
               {isFavorite(match.homeTeam.id) ? '❤️' : '🤍'}
@@ -138,7 +156,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             <button
               type="button"
               onClick={() => handleFavoriteTeam(match.awayTeam)}
-              className="text-lg"
+              className="-m-2 p-2 text-lg"
               aria-label="إضافة إلى المفضلة"
             >
               {isFavorite(match.awayTeam.id) ? '❤️' : '🤍'}

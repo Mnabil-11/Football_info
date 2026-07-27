@@ -7,7 +7,7 @@ import MatchesList from '../components/MatchesList';
 import StandingsTable from '../components/StandingsTable';
 import TopScorers from '../components/TopScorers';
 import FavoritesDashboard from '../components/FavoritesDashboard';
-import Spinner from '../components/common/Spinner';
+import { SkeletonBox, SkeletonMatchGrid } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 
 type Tab = 'matches' | 'standings' | 'scorers';
@@ -78,7 +78,23 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
       {favoritesOnly ? (
         <FavoritesDashboard />
       ) : loadingComps ? (
-        <Spinner label="جاري تحميل المسابقات..." fullScreen />
+        <>
+          <div className="flex items-center gap-3">
+            <SkeletonBox className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <SkeletonBox className="h-5 w-40" />
+              <SkeletonBox className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="mt-6 flex gap-2 border-b border-gray-200 pb-2 dark:border-gray-800">
+            <SkeletonBox className="h-6 w-20" />
+            <SkeletonBox className="h-6 w-20" />
+            <SkeletonBox className="h-6 w-20" />
+          </div>
+          <div className="mt-6">
+            <SkeletonMatchGrid />
+          </div>
+        </>
       ) : compError ? (
         <ErrorState
           message={getBackendErrorMessage(compError, 'تعذر تحميل المسابقات.')}
@@ -100,10 +116,30 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
           </div>
 
           {/* Tabs */}
-          <nav className="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-800">
+          <div
+            role="tablist"
+            aria-label="أقسام المسابقة"
+            className="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-800"
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') {
+                return;
+              }
+              e.preventDefault();
+              const currentIndex = TABS.findIndex((t) => t.key === tab);
+              const delta = e.key === 'ArrowRight' ? 1 : -1;
+              const next = TABS[(currentIndex + delta + TABS.length) % TABS.length];
+              setTab(next.key);
+              document.getElementById(`tab-${next.key}`)?.focus();
+            }}
+          >
             {TABS.map((t) => (
               <button
                 key={t.key}
+                id={`tab-${t.key}`}
+                role="tab"
+                aria-selected={tab === t.key}
+                aria-controls={`panel-${t.key}`}
+                tabIndex={tab === t.key ? 0 : -1}
                 type="button"
                 onClick={() => setTab(t.key)}
                 className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
@@ -115,13 +151,15 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
                 {t.label}
               </button>
             ))}
-          </nav>
+          </div>
 
-          {tab === 'matches' && <MatchesList code={code} />}
-          {tab === 'standings' && (
-            <StandingsTable code={code} onRequireAuth={onRequireAuth} />
-          )}
-          {tab === 'scorers' && <TopScorers code={code} />}
+          <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} tabIndex={0}>
+            {tab === 'matches' && <MatchesList code={code} />}
+            {tab === 'standings' && (
+              <StandingsTable code={code} onRequireAuth={onRequireAuth} />
+            )}
+            {tab === 'scorers' && <TopScorers code={code} />}
+          </div>
         </>
       )}
     </>

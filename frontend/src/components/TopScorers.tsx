@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { useScorers } from '../hooks/useFootball';
-import Spinner from './common/Spinner';
+import { SkeletonTable } from './common/Skeleton';
 import ErrorState from './common/ErrorState';
 import EmptyState from './common/EmptyState';
 
@@ -13,7 +13,7 @@ const TopScorers = ({ code }: TopScorersProps) => {
   const { data: scorers = [], isPending, error, refetch } = useScorers(code);
 
   if (isPending) {
-    return <Spinner label="جاري تحميل الهدافين..." />;
+    return <SkeletonTable cols={7} />;
   }
   if (error) {
     return (

@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getBackendErrorMessage } from '../api/http';
 
@@ -8,6 +8,9 @@ interface AuthModalProps {
 
 type Mode = 'login' | 'register';
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])';
+
 const AuthModal = ({ onClose }: AuthModalProps) => {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
@@ -16,6 +19,44 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
   const [password, setPassword] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Move focus into the dialog on open (and whenever the field set changes,
+  // e.g. switching to register adds the name field first). Prefer the first
+  // form field over the close button so screen reader users land somewhere
+  // useful, not on a dismiss action.
+  useEffect(() => {
+    const firstInput = dialogRef.current?.querySelector<HTMLElement>('input');
+    const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (firstInput ?? firstFocusable)?.focus();
+  }, [mode]);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab' || !dialogRef.current) {
+      return;
+    }
+    // Trap focus: Tab/Shift+Tab cycle within the dialog instead of escaping
+    // to the page behind the overlay.
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+    );
+    if (focusable.length === 0) {
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,17 +82,22 @@ const AuthModal = ({ onClose }: AuthModalProps) => {
       onMouseDown={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        onKeyDown={handleKeyDown}
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 id="auth-modal-title" className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="-m-2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             aria-label="إغلاق"
           >
             ✕

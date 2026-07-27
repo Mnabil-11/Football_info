@@ -4,7 +4,7 @@ import { FavoriteTeam } from '../types/auth';
 import { useTeamMatches } from '../hooks/useFootball';
 import { useFavorites } from '../context/FavoritesContext';
 import MatchCard from './MatchCard';
-import Spinner from './common/Spinner';
+import { SkeletonList, SkeletonMatchGrid } from './common/Skeleton';
 import ErrorState from './common/ErrorState';
 import EmptyState from './common/EmptyState';
 
@@ -29,7 +29,7 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{team.teamName}</h3>
       </div>
       {isPending ? (
-        <Spinner />
+        <SkeletonMatchGrid count={3} />
       ) : error ? (
         <ErrorState
           message={getBackendErrorMessage(error, 'تعذر تحميل مباريات الفريق.')}
@@ -51,7 +51,7 @@ const FavoritesDashboard = () => {
   const { favorites, loading, error, refresh } = useFavorites();
 
   if (loading) {
-    return <Spinner label="جاري تحميل المفضلة..." />;
+    return <SkeletonList />;
   }
   if (error) {
     return <ErrorState message={error} onRetry={refresh} />;

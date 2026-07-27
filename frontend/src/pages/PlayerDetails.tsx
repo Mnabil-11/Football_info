@@ -5,7 +5,7 @@ import { usePlayerAf, usePlayerFd } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import StatCard from '../components/common/StatCard';
-import Spinner from '../components/common/Spinner';
+import { SkeletonBox } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
 
@@ -60,7 +60,23 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
     return <ErrorState message="معرّف اللاعب غير صالح." />;
   }
   if (loading) {
-    return <Spinner label="جاري تحميل بيانات اللاعب..." fullScreen />;
+    return (
+      <div>
+        <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <SkeletonBox className="h-20 w-20 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <SkeletonBox className="h-6 w-40" />
+            <SkeletonBox className="h-4 w-32" />
+            <SkeletonBox className="h-3 w-24" />
+          </div>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 7 }, (_, i) => (
+            <SkeletonBox key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
   }
   if (error || !data) {
     return (
@@ -113,7 +129,7 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
         <button
           type="button"
           onClick={handleFavorite}
-          className="text-2xl"
+          className="-m-2 p-2 text-2xl"
           aria-label="إضافة إلى المفضلة"
         >
           {isPlayerFavorite(playerId) ? '❤️' : '🤍'}

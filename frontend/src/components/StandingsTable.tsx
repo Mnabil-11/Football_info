@@ -3,7 +3,7 @@ import { StandingRow, teamRefToSummary } from '../types/football';
 import { useStandings } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
-import Spinner from './common/Spinner';
+import { SkeletonTable } from './common/Skeleton';
 import ErrorState from './common/ErrorState';
 import EmptyState from './common/EmptyState';
 
@@ -28,7 +28,7 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
   };
 
   if (isPending) {
-    return <Spinner label="جاري تحميل الترتيب..." />;
+    return <SkeletonTable cols={11} />;
   }
   if (error) {
     return (
@@ -91,7 +91,7 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
                 <button
                   type="button"
                   onClick={() => handleFavorite(row)}
-                  className="text-base"
+                  className="-m-2 p-2 text-base"
                   aria-label="إضافة إلى المفضلة"
                   title="إضافة إلى المفضلة"
                 >
