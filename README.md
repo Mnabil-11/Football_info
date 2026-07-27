@@ -94,12 +94,18 @@ flowchart TB
 
 ## Features
 
-- 🌍 **Arabic-first UI** — `<html lang="ar" dir="rtl">` by default
+- 🌍 **Arabic-first UI** — `<html lang="ar" dir="rtl">` by default, self-hosted
+  Arabic font
+- 🌗 **Dark mode** — respects system preference, toggle persisted locally
 - 🔐 **JWT authentication** — register, login, session persistence
 - ⭐ **Favorites system** — save favorite teams and players, dedicated
-  favorites dashboard
+  favorites dashboard with optimistic add/remove
+- 🔍 **Search** — find a competition or a team in the currently open league
+- 🏟️ **Team profile pages** — crest, venue, coach, squad, recent/upcoming
+  matches
 - 📊 **Live match details** — lineups, pitch visualization, goal/card
-  events, match statistics (when available)
+  events, match statistics (when available), auto-refreshing every 30s
+  while a match is in progress
 - 👤 **Player profiles** — season stats pulled from whichever provider has
   them
 - 🏆 **Competitions, standings, and top scorers** across supported leagues
@@ -110,10 +116,11 @@ flowchart TB
 
 | Layer | Stack |
 |---|---|
-| Frontend | Vite, React 18, TypeScript (strict), Tailwind CSS, Axios, React Router |
-| Backend | Node.js, Express, TypeScript, JWT, bcryptjs, Zod |
+| Frontend | Vite, React 18, TypeScript (strict), Tailwind CSS, TanStack Query, Axios, React Router |
+| Backend | Node.js, Express, TypeScript, JWT, bcryptjs, Zod, helmet |
 | Database | PostgreSQL (Neon) via Prisma ORM + Neon serverless adapter |
 | Data APIs | football-data.org v4, API-Football (RapidAPI) — both proxied server-side |
+| Testing/CI | Vitest, Testing Library, supertest, GitHub Actions |
 
 ---
 
@@ -210,7 +217,7 @@ Required env (`backend/.env`):
 | POST | `/api/auth/register` | — | Create account, get token |
 | POST | `/api/auth/login` | — | Login, get token |
 | GET | `/api/auth/me` | ✅ | Current user |
-| POST | `/api/auth/logout` | ✅ | Logout (client drops JWT) |
+| POST | `/api/auth/logout` | ✅ | Logout (clears the httpOnly session cookie) |
 | GET | `/api/favorites/teams` | ✅ | List favorite teams |
 | POST | `/api/favorites/teams` | ✅ | Add favorite team |
 | DELETE | `/api/favorites/teams/:id` | ✅ | Remove favorite team |
@@ -221,6 +228,8 @@ Required env (`backend/.env`):
 | GET | `/api/football/competitions/:code/standings` | — | League table |
 | GET | `/api/football/competitions/:code/scorers` | — | Top scorers |
 | GET | `/api/football/competitions/:code/matches` | — | Competition matches |
+| GET | `/api/football/competitions/:code/teams` | — | Teams in a competition |
+| GET | `/api/football/teams/:id` | — | Team profile: crest, venue, coach, squad |
 | GET | `/api/football/teams/:id/matches` | — | A team's matches |
 | GET | `/api/football/matches/:id` | — | Match detail + best-effort lineups/events/stats |
 | GET | `/api/football/players/fd/:id` | — | Player bio (football-data.org) + best-effort stats |
@@ -238,11 +247,22 @@ free-tier rate limits.
   browser — the frontend always calls the backend proxy.
 - Passwords are hashed with `bcryptjs` before storage.
 - Auth routes are protected by JWT middleware; tokens are validated on every
-  protected request.
+  protected request. The session JWT lives in an httpOnly cookie
+  (`sameSite: 'lax'`), never in `localStorage`.
 - Input is validated with `Zod` schemas before hitting the database or any
-  external API.
+  external API — including the public football proxy's `:code` and
+  `?status` parameters.
+- `helmet` sets CSP, HSTS, and related security headers on every response.
+- The football proxy and auth routes are both rate-limited to slow down
+  abuse/brute-force attempts.
+- Graceful shutdown on `SIGTERM`/`SIGINT` lets in-flight requests finish
+  before the process exits.
 - ⚠️ Set a strong, unique `JWT_SECRET` before any real deployment — never
   reuse the development value.
+- ⚠️ CSRF protection currently relies on `sameSite: 'lax'`, which only holds
+  as long as the deployed frontend and API share a registrable domain (e.g.
+  `app.example.com` + `api.example.com`). Splitting them across unrelated
+  domains would require `sameSite: 'none'` plus a real CSRF token.
 
 ---
 
@@ -252,8 +272,13 @@ free-tier rate limits.
 - [x] Match details with best-effort enrichment
 - [x] JWT auth (register/login/session)
 - [x] Favorites (teams + players)
-- [ ] Automated tests (backend integration tests, frontend component tests)
-- [ ] CI pipeline (lint + test on every push)
+- [x] Dark mode, Arabic self-hosted font, skeleton loaders
+- [x] Team search + team profile pages
+- [x] Live-match polling (30s, only while a match is in progress)
+- [x] Automated tests (backend integration tests, frontend component tests)
+- [x] CI pipeline (lint + test + build on every push)
+- [ ] Fantasy team (pick a squad, score points from real stats)
+- [ ] Player comparison view
 - [ ] Production deployment (Vercel for frontend, Railway/Render for backend)
 - [ ] Push notifications for favorite team match starts
 
