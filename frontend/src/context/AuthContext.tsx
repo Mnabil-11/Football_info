@@ -8,10 +8,13 @@ import {
   ReactNode,
 } from 'react';
 import {
+  changePasswordRequest,
+  deleteAccountRequest,
   loginRequest,
   logoutRequest,
   meRequest,
   registerRequest,
+  updateProfileRequest,
 } from '../api/authApi';
 import { AuthUser } from '../types/auth';
 
@@ -23,6 +26,9 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: { name?: string; avatar?: string | null }) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -84,6 +90,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const updateProfile = useCallback(
+    async (data: { name?: string; avatar?: string | null }) => {
+      const updated = await updateProfileRequest(data);
+      setUser(updated);
+    },
+    []
+  );
+
+  const changePassword = useCallback(
+    (currentPassword: string, newPassword: string) =>
+      changePasswordRequest({ currentPassword, newPassword }),
+    []
+  );
+
+  const deleteAccount = useCallback(async (password: string) => {
+    await deleteAccountRequest(password);
+    setUser(null);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -92,8 +117,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       register,
       logout,
+      updateProfile,
+      changePassword,
+      deleteAccount,
     }),
-    [user, initializing, login, register, logout]
+    [
+      user,
+      initializing,
+      login,
+      register,
+      logout,
+      updateProfile,
+      changePassword,
+      deleteAccount,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

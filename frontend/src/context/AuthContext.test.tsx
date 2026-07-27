@@ -7,6 +7,9 @@ vi.mock('../api/authApi', () => ({
   registerRequest: vi.fn(),
   meRequest: vi.fn(),
   logoutRequest: vi.fn(),
+  updateProfileRequest: vi.fn(),
+  changePasswordRequest: vi.fn(),
+  deleteAccountRequest: vi.fn(),
 }));
 
 import { loginRequest, logoutRequest, meRequest } from '../api/authApi';

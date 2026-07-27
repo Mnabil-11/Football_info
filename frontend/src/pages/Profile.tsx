@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { getBackendErrorMessage } from '../api/http';
 import { SkeletonList } from '../components/common/Skeleton';
 import Avatar from '../components/common/Avatar';
 import ErrorState from '../components/common/ErrorState';
@@ -11,6 +12,264 @@ import { hideOnImgError } from '../utils/img';
 interface ProfileProps {
   onBack: () => void;
 }
+
+const inputClass =
+  'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100';
+const labelClass = 'mb-1 block text-sm text-gray-700 dark:text-gray-300';
+
+/** Name/avatar edit, password change, and account deletion — all folded into
+ * collapsible sections so the profile page stays scannable by default. */
+const AccountSettings = ({ onAccountDeleted }: { onAccountDeleted: () => void }) => {
+  const { user, updateProfile, changePassword, deleteAccount, logout } = useAuth();
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [name, setName] = useState(user?.name ?? '');
+  const [avatar, setAvatar] = useState(user?.avatar ?? '');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  if (!user) {
+    return null;
+  }
+
+  const handleSaveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProfileSaving(true);
+    setProfileError(null);
+    try {
+      await updateProfile({
+        name: name.trim() !== user.name ? name.trim() : undefined,
+        avatar: avatar.trim() !== (user.avatar ?? '') ? avatar.trim() || null : undefined,
+      });
+      setEditingProfile(false);
+    } catch (err) {
+      setProfileError(getBackendErrorMessage(err, 'تعذر حفظ التغييرات.'));
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(false);
+    if (newPassword !== confirmPassword) {
+      setPasswordError('كلمتا المرور الجديدتان غير متطابقتين.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPasswordError(getBackendErrorMessage(err, 'تعذر تغيير كلمة المرور.'));
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setDeleteError(null);
+    setDeleting(true);
+    try {
+      await deleteAccount(deletePassword);
+      await logout();
+      onAccountDeleted();
+    } catch (err) {
+      setDeleteError(getBackendErrorMessage(err, 'تعذر حذف الحساب.'));
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 space-y-4">
+      {/* Edit name/avatar */}
+      <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+        <button
+          type="button"
+          onClick={() => setEditingProfile((v) => !v)}
+          className="flex w-full items-center justify-between text-start text-sm font-medium text-gray-900 dark:text-gray-100"
+        >
+          تعديل الاسم والصورة
+          <span aria-hidden>{editingProfile ? '−' : '+'}</span>
+        </button>
+        {editingProfile && (
+          <form onSubmit={handleSaveProfile} className="mt-4 space-y-3">
+            <div>
+              <label htmlFor="profile-name" className={labelClass}>
+                الاسم
+              </label>
+              <input
+                id="profile-name"
+                type="text"
+                required
+                minLength={2}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="profile-avatar" className={labelClass}>
+                رابط الصورة الشخصية (اختياري)
+              </label>
+              <input
+                id="profile-avatar"
+                type="url"
+                placeholder="https://..."
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className={inputClass}
+                dir="ltr"
+              />
+            </div>
+            {profileError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{profileError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={profileSaving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {profileSaving ? '...جارٍ الحفظ' : 'حفظ'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Change password */}
+      <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+        <button
+          type="button"
+          onClick={() => setChangingPassword((v) => !v)}
+          className="flex w-full items-center justify-between text-start text-sm font-medium text-gray-900 dark:text-gray-100"
+        >
+          تغيير كلمة المرور
+          <span aria-hidden>{changingPassword ? '−' : '+'}</span>
+        </button>
+        {changingPassword && (
+          <form onSubmit={handleChangePassword} className="mt-4 space-y-3">
+            <div>
+              <label htmlFor="current-password" className={labelClass}>
+                كلمة المرور الحالية
+              </label>
+              <input
+                id="current-password"
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className={inputClass}
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label htmlFor="new-password" className={labelClass}>
+                كلمة المرور الجديدة
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                required
+                minLength={6}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className={inputClass}
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm-password" className={labelClass}>
+                تأكيد كلمة المرور الجديدة
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={inputClass}
+                dir="ltr"
+              />
+            </div>
+            {passwordError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+            )}
+            {passwordSuccess && (
+              <p className="text-sm text-green-600 dark:text-green-400">
+                تم تغيير كلمة المرور بنجاح.
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={passwordSaving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {passwordSaving ? '...جارٍ الحفظ' : 'تغيير كلمة المرور'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Delete account */}
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+        <button
+          type="button"
+          onClick={() => setConfirmingDelete((v) => !v)}
+          className="flex w-full items-center justify-between text-start text-sm font-medium text-red-700 dark:text-red-400"
+        >
+          حذف الحساب نهائياً
+          <span aria-hidden>{confirmingDelete ? '−' : '+'}</span>
+        </button>
+        {confirmingDelete && (
+          <form onSubmit={handleDeleteAccount} className="mt-4 space-y-3">
+            <p className="text-sm text-red-700 dark:text-red-400">
+              هذا الإجراء نهائي ولا يمكن التراجع عنه — سيتم حذف حسابك وكل مفضلاتك.
+              أدخل كلمة المرور لتأكيد الحذف.
+            </p>
+            <input
+              type="password"
+              required
+              placeholder="كلمة المرور"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              className={inputClass}
+              dir="ltr"
+            />
+            {deleteError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{deleteError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={deleting}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              {deleting ? '...جارٍ الحذف' : 'حذف الحساب نهائياً'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Profile = ({ onBack }: ProfileProps) => {
   const { user } = useAuth();
@@ -71,6 +330,8 @@ const Profile = ({ onBack }: ProfileProps) => {
           </p>
         </div>
       </div>
+
+      <AccountSettings onAccountDeleted={onBack} />
 
       {/* Favorites */}
       <div className="mt-8">

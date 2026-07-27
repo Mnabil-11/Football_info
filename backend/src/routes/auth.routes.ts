@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { login, logout, me, register } from '../controllers/auth.controller';
+import {
+  changePasswordHandler,
+  deleteAccountHandler,
+  login,
+  logout,
+  me,
+  register,
+  updateProfileHandler,
+} from '../controllers/auth.controller';
 import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -21,5 +29,9 @@ router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.get('/me', requireAuth, me);
 router.post('/logout', requireAuth, logout);
+router.patch('/profile', requireAuth, updateProfileHandler);
+// Both verify a password, so they share the brute-force throttle.
+router.patch('/password', requireAuth, authLimiter, changePasswordHandler);
+router.delete('/me', requireAuth, authLimiter, deleteAccountHandler);
 
 export default router;

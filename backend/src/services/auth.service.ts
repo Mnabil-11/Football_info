@@ -20,6 +20,16 @@ export interface AuthResult {
   token: string;
 }
 
+export interface UpdateProfileInput {
+  name?: string;
+  avatar?: string | null;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 /** Fields selected whenever we return a user (never the password hash). */
 const safeUserSelect = {
   id: true,
@@ -78,4 +88,68 @@ export const loginUser = async (input: LoginInput): Promise<AuthResult> => {
     },
     token,
   };
+};
+
+/** Update the caller's own name and/or avatar URL. */
+export const updateProfile = async (
+  userId: string,
+  input: UpdateProfileInput
+): Promise<SafeUser> => {
+  const data: { name?: string; avatar?: string | null } = {};
+  if (input.name !== undefined) {
+    data.name = input.name.trim();
+  }
+  if (input.avatar !== undefined) {
+    data.avatar = input.avatar;
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: safeUserSelect,
+  });
+};
+
+/** Change the caller's password after verifying the current one. */
+export const changePassword = async (
+  userId: string,
+  input: ChangePasswordInput
+): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw ApiError.unauthorized('المستخدم غير موجود');
+  }
+
+  const valid = await verifyPassword(input.currentPassword, user.password);
+  if (!valid) {
+    throw ApiError.unauthorized('كلمة المرور الحالية غير صحيحة');
+  }
+
+  const passwordHash = await hashPassword(input.newPassword);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: passwordHash },
+  });
+};
+
+/**
+ * Delete the caller's account after verifying their password. Favorites
+ * (teams/players) and fantasy teams cascade-delete via the schema's
+ * onDelete: Cascade — no separate cleanup needed here.
+ */
+export const deleteAccount = async (
+  userId: string,
+  password: string
+): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw ApiError.unauthorized('المستخدم غير موجود');
+  }
+
+  const valid = await verifyPassword(password, user.password);
+  if (!valid) {
+    throw ApiError.unauthorized('كلمة المرور غير صحيحة');
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
 };

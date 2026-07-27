@@ -6,6 +6,8 @@ vi.mock('../config/prisma', () => ({
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }));
@@ -17,6 +19,8 @@ import app from '../app';
 
 const mockedFindUnique = vi.mocked(prisma.user.findUnique);
 const mockedCreate = vi.mocked(prisma.user.create);
+const mockedUpdate = vi.mocked(prisma.user.update);
+const mockedDelete = vi.mocked(prisma.user.delete);
 
 const safeUser = {
   id: 'user-1',
@@ -155,6 +159,141 @@ describe('POST /api/auth/logout', () => {
 
     expect(res.status).toBe(200);
     // clearCookie sends an expired cookie rather than omitting the header.
+    expect(res.headers['set-cookie']?.[0]).toMatch(/^ft_token=;/);
+  });
+});
+
+describe('PATCH /api/auth/profile', () => {
+  const authHeader = () => ({ Authorization: `Bearer ${signToken({ userId: safeUser.id })}` });
+
+  it('requires auth', async () => {
+    const res = await request(app).patch('/api/auth/profile').send({ name: 'New Name' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects an invalid avatar URL (400) before touching the database', async () => {
+    const res = await request(app)
+      .patch('/api/auth/profile')
+      .set(authHeader())
+      .send({ avatar: 'not-a-url' });
+
+    expect(res.status).toBe(400);
+    expect(mockedUpdate).not.toHaveBeenCalled();
+  });
+
+  it('updates the name and returns the updated user', async () => {
+    mockedUpdate.mockResolvedValue({
+      ...safeUser,
+      createdAt: new Date(safeUser.createdAt),
+      name: 'New Name',
+    } as never);
+
+    const res = await request(app)
+      .patch('/api/auth/profile')
+      .set(authHeader())
+      .send({ name: 'New Name' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.user.name).toBe('New Name');
+  });
+});
+
+describe('PATCH /api/auth/password', () => {
+  const authHeader = () => ({ Authorization: `Bearer ${signToken({ userId: safeUser.id })}` });
+
+  it('requires auth', async () => {
+    const res = await request(app)
+      .patch('/api/auth/password')
+      .send({ currentPassword: 'old', newPassword: 'newpassword123' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a short new password (400)', async () => {
+    const res = await request(app)
+      .patch('/api/auth/password')
+      .set(authHeader())
+      .send({ currentPassword: 'old', newPassword: 'abc' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects the wrong current password (401) without updating', async () => {
+    const password = await hashPassword('correct-password');
+    mockedFindUnique.mockResolvedValue({
+      ...safeUser,
+      createdAt: new Date(safeUser.createdAt),
+      password,
+    } as never);
+
+    const res = await request(app)
+      .patch('/api/auth/password')
+      .set(authHeader())
+      .send({ currentPassword: 'wrong-password', newPassword: 'newpassword123' });
+
+    expect(res.status).toBe(401);
+    expect(mockedUpdate).not.toHaveBeenCalled();
+  });
+
+  it('changes the password when the current one is correct', async () => {
+    const password = await hashPassword('correct-password');
+    mockedFindUnique.mockResolvedValue({
+      ...safeUser,
+      createdAt: new Date(safeUser.createdAt),
+      password,
+    } as never);
+    mockedUpdate.mockResolvedValue({} as never);
+
+    const res = await request(app)
+      .patch('/api/auth/password')
+      .set(authHeader())
+      .send({ currentPassword: 'correct-password', newPassword: 'newpassword123' });
+
+    expect(res.status).toBe(200);
+    expect(mockedUpdate).toHaveBeenCalledOnce();
+  });
+});
+
+describe('DELETE /api/auth/me', () => {
+  const authHeader = () => ({ Authorization: `Bearer ${signToken({ userId: safeUser.id })}` });
+
+  it('requires auth', async () => {
+    const res = await request(app).delete('/api/auth/me').send({ password: 'whatever' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects the wrong password (401) without deleting', async () => {
+    const password = await hashPassword('correct-password');
+    mockedFindUnique.mockResolvedValue({
+      ...safeUser,
+      createdAt: new Date(safeUser.createdAt),
+      password,
+    } as never);
+
+    const res = await request(app)
+      .delete('/api/auth/me')
+      .set(authHeader())
+      .send({ password: 'wrong-password' });
+
+    expect(res.status).toBe(401);
+    expect(mockedDelete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the account and clears the session cookie when the password is correct', async () => {
+    const password = await hashPassword('correct-password');
+    mockedFindUnique.mockResolvedValue({
+      ...safeUser,
+      createdAt: new Date(safeUser.createdAt),
+      password,
+    } as never);
+    mockedDelete.mockResolvedValue({} as never);
+
+    const res = await request(app)
+      .delete('/api/auth/me')
+      .set(authHeader())
+      .send({ password: 'correct-password' });
+
+    expect(res.status).toBe(200);
+    expect(mockedDelete).toHaveBeenCalledWith({ where: { id: safeUser.id } });
     expect(res.headers['set-cookie']?.[0]).toMatch(/^ft_token=;/);
   });
 });

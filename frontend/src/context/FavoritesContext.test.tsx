@@ -9,6 +9,9 @@ vi.mock('../api/authApi', () => ({
   loginRequest: vi.fn(),
   registerRequest: vi.fn(),
   logoutRequest: vi.fn(),
+  updateProfileRequest: vi.fn(),
+  changePasswordRequest: vi.fn(),
+  deleteAccountRequest: vi.fn(),
 }));
 
 vi.mock('../api/favoritesApi', () => ({

@@ -17,6 +17,16 @@ export interface LoginBody {
   password: string;
 }
 
+export interface UpdateProfileBody {
+  name?: string;
+  avatar?: string | null;
+}
+
+export interface ChangePasswordBody {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const registerRequest = async (
   body: RegisterBody
 ): Promise<AuthPayload> => {
@@ -39,4 +49,24 @@ export const meRequest = async (): Promise<AuthUser> => {
 
 export const logoutRequest = async (): Promise<void> => {
   await http.post('/auth/logout');
+};
+
+export const updateProfileRequest = async (
+  body: UpdateProfileBody
+): Promise<AuthUser> => {
+  const { data } = await http.patch<ApiEnvelope<{ user: AuthUser }>>(
+    '/auth/profile',
+    body
+  );
+  return data.data.user;
+};
+
+export const changePasswordRequest = async (
+  body: ChangePasswordBody
+): Promise<void> => {
+  await http.patch('/auth/password', body);
+};
+
+export const deleteAccountRequest = async (password: string): Promise<void> => {
+  await http.delete('/auth/me', { data: { password } });
 };
