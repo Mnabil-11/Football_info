@@ -2,14 +2,17 @@ import { useQuery } from '@tanstack/react-query';
 import {
   fetchCompetitionMatches,
   fetchCompetitions,
+  fetchCompetitionTeams,
   fetchMatchDetail,
   fetchPlayerAf,
   fetchPlayerFd,
   fetchScorers,
   fetchStandings,
+  fetchTeamDetail,
   fetchTeamMatches,
 } from '../api/footballApi';
-import { StandingRow } from '../types/football';
+import { Match, MatchDetailResponse, StandingRow } from '../types/football';
+import { isLive } from '../utils/matchStatus';
 
 /**
  * React Query wrappers around the backend football proxy.
@@ -30,6 +33,8 @@ export const footballKeys = {
     ['football', 'competition-matches', code, status ?? 'all'] as const,
   teamMatches: (teamId: number, status?: string) =>
     ['football', 'team-matches', teamId, status ?? 'all'] as const,
+  competitionTeams: (code: string) => ['football', 'competition-teams', code] as const,
+  team: (teamId: number) => ['football', 'team', teamId] as const,
   match: (id: number) => ['football', 'match', id] as const,
   playerFd: (id: number) => ['football', 'player', 'fd', id] as const,
   playerAf: (id: number, season?: number) =>
@@ -37,6 +42,10 @@ export const footballKeys = {
 };
 
 const MINUTE = 60_000;
+// TanStack Query only fires `refetchInterval` while the tab is focused
+// (refetchIntervalInBackground defaults to false), so this never polls a
+// backgrounded tab.
+const LIVE_POLL_MS = 30_000;
 
 export const useCompetitions = () =>
   useQuery({
@@ -70,12 +79,17 @@ export const useScorers = (code: string) =>
     staleTime: 5 * MINUTE,
   });
 
+/** Polls every 30s while any match in the list is in progress; stops otherwise. */
+const hasLiveMatch = (matches: Match[] | undefined): boolean =>
+  matches?.some((m) => isLive(m.status)) ?? false;
+
 export const useCompetitionMatches = (code: string, status?: string) =>
   useQuery({
     queryKey: footballKeys.competitionMatches(code, status),
     queryFn: () => fetchCompetitionMatches(code, status),
     enabled: code.length > 0,
     staleTime: 2 * MINUTE,
+    refetchInterval: (query) => (hasLiveMatch(query.state.data) ? LIVE_POLL_MS : false),
   });
 
 export const useTeamMatches = (teamId: number, status?: string) =>
@@ -84,6 +98,23 @@ export const useTeamMatches = (teamId: number, status?: string) =>
     queryFn: () => fetchTeamMatches(teamId, status),
     enabled: Number.isInteger(teamId) && teamId > 0,
     staleTime: 2 * MINUTE,
+    refetchInterval: (query) => (hasLiveMatch(query.state.data) ? LIVE_POLL_MS : false),
+  });
+
+export const useCompetitionTeamsList = (code: string) =>
+  useQuery({
+    queryKey: footballKeys.competitionTeams(code),
+    queryFn: () => fetchCompetitionTeams(code),
+    enabled: code.length > 0,
+    staleTime: 10 * MINUTE,
+  });
+
+export const useTeamDetail = (teamId: number) =>
+  useQuery({
+    queryKey: footballKeys.team(teamId),
+    queryFn: () => fetchTeamDetail(teamId),
+    enabled: Number.isInteger(teamId) && teamId > 0,
+    staleTime: 60 * MINUTE,
   });
 
 export const useMatchDetail = (matchId: number) =>
@@ -92,6 +123,10 @@ export const useMatchDetail = (matchId: number) =>
     queryFn: () => fetchMatchDetail(matchId),
     enabled: Number.isInteger(matchId) && matchId > 0,
     staleTime: MINUTE,
+    refetchInterval: (query) => {
+      const data = query.state.data as MatchDetailResponse | undefined;
+      return data && isLive(data.match.status) ? LIVE_POLL_MS : false;
+    },
   });
 
 /**

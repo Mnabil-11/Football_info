@@ -70,14 +70,14 @@ const TopScorers = ({ code }: TopScorersProps) => {
                 )}
               </td>
               <td className="px-4 py-2">
-                <div className="flex items-center gap-2">
+                <Link to={`/team/${s.team.id}`} className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400">
                   {s.team.crest && (
                     <img src={s.team.crest} alt={s.team.name} width={20} height={20} className="h-5 w-5 object-contain" loading="lazy" onError={hideOnImgError} />
                   )}
                   <span className="text-gray-700 dark:text-gray-300">
                     {s.team.shortName ?? s.team.name}
                   </span>
-                </div>
+                </Link>
               </td>
               <td className="px-4 py-2 text-center text-gray-600 dark:text-gray-400">
                 {s.playedMatches ?? '—'}

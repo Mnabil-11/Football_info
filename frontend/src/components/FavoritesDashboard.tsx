@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { FavoriteTeam } from '../types/auth';
 import { hideOnImgError } from '../utils/img';
@@ -23,7 +24,10 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
 
   return (
     <section>
-      <div className="mb-3 flex items-center gap-3">
+      <Link
+        to={`/team/${team.teamId}`}
+        className="mb-3 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400"
+      >
         {team.teamLogo && (
           <img
             src={team.teamLogo}
@@ -36,7 +40,7 @@ const TeamMatches = ({ team }: { team: FavoriteTeam }) => {
           />
         )}
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{team.teamName}</h3>
-      </div>
+      </Link>
       {isPending ? (
         <SkeletonMatchGrid count={3} />
       ) : error ? (

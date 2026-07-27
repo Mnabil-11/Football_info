@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { teamRefToSummary } from '../types/football';
 import { hideOnImgError } from '../utils/img';
+import { isFinished, isLive } from '../utils/matchStatus';
 import { useMatchDetail } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
-import { isFinished } from '../components/MatchCard';
 import PitchVisualization from '../components/PitchVisualization';
+import LiveBadge from '../components/common/LiveBadge';
 import { SkeletonBox } from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
@@ -90,6 +91,7 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
   const { match, enrichment } = data;
   const played = isFinished(match.status);
+  const live = isLive(match.status);
 
   const handleFavoriteTeam = (team: typeof match.homeTeam) => {
     if (!isAuthenticated) {
@@ -115,12 +117,14 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
 
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-1 flex-col items-center gap-2">
-            {match.homeTeam.crest && (
-              <img src={match.homeTeam.crest} alt={match.homeTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
-            )}
-            <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
-              {match.homeTeam.name}
-            </span>
+            <Link to={`/team/${match.homeTeam.id}`} className="flex flex-col items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400">
+              {match.homeTeam.crest && (
+                <img src={match.homeTeam.crest} alt={match.homeTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
+              )}
+              <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
+                {match.homeTeam.name}
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => handleFavoriteTeam(match.homeTeam)}
@@ -132,8 +136,8 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
           </div>
 
           <div className="flex flex-col items-center px-4">
-            {played ? (
-              <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
+            {played || live ? (
+              <span className={`text-3xl font-extrabold ${live ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
                 {match.score.fullTime.home ?? 0} - {match.score.fullTime.away ?? 0}
               </span>
             ) : (
@@ -141,19 +145,27 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
                 {formatDateTime(match.utcDate)}
               </span>
             )}
-            <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">{match.status}</span>
+            {live ? (
+              <span className="mt-1">
+                <LiveBadge />
+              </span>
+            ) : (
+              <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">{match.status}</span>
+            )}
             {match.matchday !== null && (
               <span className="text-xs text-gray-400 dark:text-gray-500">الجولة {match.matchday}</span>
             )}
           </div>
 
           <div className="flex flex-1 flex-col items-center gap-2">
-            {match.awayTeam.crest && (
-              <img src={match.awayTeam.crest} alt={match.awayTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
-            )}
-            <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
-              {match.awayTeam.name}
-            </span>
+            <Link to={`/team/${match.awayTeam.id}`} className="flex flex-col items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400">
+              {match.awayTeam.crest && (
+                <img src={match.awayTeam.crest} alt={match.awayTeam.name} width={64} height={64} className="h-16 w-16 object-contain" onError={hideOnImgError} />
+              )}
+              <span className="text-center font-semibold text-gray-900 dark:text-gray-100">
+                {match.awayTeam.name}
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => handleFavoriteTeam(match.awayTeam)}

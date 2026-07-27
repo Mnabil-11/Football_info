@@ -3,6 +3,7 @@ import { getBackendErrorMessage } from '../api/http';
 import { useCompetitions } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import CompetitionSelect from '../components/CompetitionSelect';
+import SearchBar from '../components/SearchBar';
 import MatchesList from '../components/MatchesList';
 import StandingsTable from '../components/StandingsTable';
 import TopScorers from '../components/TopScorers';
@@ -53,11 +54,18 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
             بيانات مباشرة من football-data.org
           </p>
           {!loadingComps && !compError && competitions.length > 0 && (
-            <CompetitionSelect
-              competitions={competitions}
-              value={code}
-              onChange={setPickedCode}
-            />
+            <div className="space-y-3">
+              <CompetitionSelect
+                competitions={competitions}
+                value={code}
+                onChange={setPickedCode}
+              />
+              <SearchBar
+                competitions={competitions}
+                currentCode={code}
+                onSelectCompetition={setPickedCode}
+              />
+            </div>
           )}
         </div>
       )}

@@ -27,6 +27,49 @@ export interface TeamRef {
   crest: string | null;
 }
 
+export interface SquadMember {
+  id: number;
+  name: string;
+  position: string | null;
+  dateOfBirth: string | null;
+  nationality: string | null;
+}
+
+export interface Coach {
+  id: number | null;
+  name: string | null;
+  nationality: string | null;
+}
+
+export interface RunningCompetition {
+  id: number;
+  name: string;
+  code: string;
+  emblem: string | null;
+}
+
+/**
+ * Full team profile. `squad` and `coach` fields are frequently empty/null —
+ * football-data.org's free tier doesn't reliably populate them for most
+ * teams, so callers must treat that as "unavailable", not an error.
+ */
+export interface TeamDetail {
+  id: number;
+  name: string;
+  shortName: string | null;
+  tla: string | null;
+  crest: string | null;
+  address: string | null;
+  website: string | null;
+  founded: number | null;
+  clubColors: string | null;
+  venue: string | null;
+  area: Area;
+  coach: Coach | null;
+  squad: SquadMember[];
+  runningCompetitions: RunningCompetition[];
+}
+
 /** Team shape stored in favorites (logo instead of crest). */
 export interface TeamSummary {
   id: number;

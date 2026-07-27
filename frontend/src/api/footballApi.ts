@@ -8,6 +8,8 @@ import {
   MatchDetailResponse,
   Scorer,
   Standing,
+  TeamDetail,
+  TeamRef,
 } from '../types/football';
 
 /**
@@ -29,6 +31,10 @@ interface ScorersData {
 
 interface MatchesData {
   matches: Match[];
+}
+
+interface TeamsData {
+  teams: TeamRef[];
 }
 
 export const fetchCompetitions = async (): Promise<Competition[]> => {
@@ -61,6 +67,21 @@ export const fetchCompetitionMatches = async (
     { params: status ? { status } : undefined }
   );
   return data.data.matches;
+};
+
+export const fetchCompetitionTeams = async (code: string): Promise<TeamRef[]> => {
+  const { data } = await http.get<ApiEnvelope<TeamsData>>(
+    `/football/competitions/${code}/teams`
+  );
+  return data.data.teams;
+};
+
+/** Full team profile: crest, venue, coach, squad (coach/squad are best-effort — see TeamDetail). */
+export const fetchTeamDetail = async (teamId: number): Promise<TeamDetail> => {
+  const { data } = await http.get<ApiEnvelope<TeamDetail>>(
+    `/football/teams/${teamId}`
+  );
+  return data.data;
 };
 
 export const fetchTeamMatches = async (

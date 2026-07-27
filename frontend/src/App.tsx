@@ -12,6 +12,7 @@ import EmptyState from './components/common/EmptyState';
 const Profile = lazy(() => import('./pages/Profile'));
 const MatchDetails = lazy(() => import('./pages/MatchDetails'));
 const PlayerDetails = lazy(() => import('./pages/PlayerDetails'));
+const TeamDetails = lazy(() => import('./pages/TeamDetails'));
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -83,6 +84,10 @@ function App() {
             <Route
               path="/player/:provider/:id"
               element={<PlayerDetails onRequireAuth={() => setAuthOpen(true)} />}
+            />
+            <Route
+              path="/team/:id"
+              element={<TeamDetails onRequireAuth={() => setAuthOpen(true)} />}
             />
             <Route
               path="*"

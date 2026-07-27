@@ -120,6 +120,46 @@ export interface FdTeamsResponse {
   teams: FdTeamRef[];
 }
 
+/* ── /teams/:id (single team, full detail) ───────────────────────────────── */
+
+export interface FdSquadMember {
+  id: number;
+  name: string;
+  position: string | null;
+  dateOfBirth: string | null;
+  nationality: string | null;
+}
+
+export interface FdCoach {
+  id: number;
+  name: string | null;
+  nationality: string | null;
+}
+
+export interface FdRunningCompetition {
+  id: number;
+  name: string;
+  code: string;
+  emblem: string | null;
+}
+
+export interface FdTeamDetail {
+  id: number;
+  name: string;
+  shortName: string | null;
+  tla: string | null;
+  crest: string | null;
+  address: string | null;
+  website: string | null;
+  founded: number | null;
+  clubColors: string | null;
+  venue: string | null;
+  area: FdArea;
+  coach: FdCoach | null;
+  squad: FdSquadMember[];
+  runningCompetitions: FdRunningCompetition[];
+}
+
 /* ── /matches/:id (returns the match object directly, no envelope) ──────── */
 
 export interface FdMatchDetail extends FdMatch {

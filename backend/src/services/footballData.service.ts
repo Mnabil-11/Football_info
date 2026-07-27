@@ -9,6 +9,7 @@ import {
   FdPerson,
   FdScorersResponse,
   FdStandingsResponse,
+  FdTeamDetail,
   FdTeamsResponse,
 } from '../types/footballData';
 
@@ -101,6 +102,10 @@ export const getMatchById = (id: number): Promise<FdMatchDetail> =>
 
 export const getPersonById = (id: number): Promise<FdPerson> =>
   get<FdPerson>(`/persons/${id}`, `person:${id}`, 3_600_000);
+
+// Team profiles (crest, venue, coach, squad) change rarely; cache for an hour.
+export const getTeamById = (id: number): Promise<FdTeamDetail> =>
+  get<FdTeamDetail>(`/teams/${id}`, `team:${id}`, 3_600_000);
 
 export const getTeamMatches = (
   teamId: number,

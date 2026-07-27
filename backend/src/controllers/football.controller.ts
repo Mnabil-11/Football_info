@@ -5,9 +5,18 @@ import {
   getCompetitionTeams,
   getScorers,
   getStandings,
+  getTeamById,
   getTeamMatches,
 } from '../services/footballData.service';
 import { ApiError } from '../utils/ApiError';
+
+const parseTeamId = (raw: string): number => {
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw ApiError.badRequest('معرّف الفريق غير صالح.');
+  }
+  return id;
+};
 
 /** GET /api/football/competitions */
 export const competitions: RequestHandler = async (_req, res, next) => {
@@ -59,13 +68,20 @@ export const competitionMatches: RequestHandler = async (req, res, next) => {
   }
 };
 
+/** GET /api/football/teams/:id — crest, venue, coach, squad. */
+export const teamDetail: RequestHandler = async (req, res, next) => {
+  try {
+    const teamId = parseTeamId(req.params.id);
+    res.json({ success: true, data: await getTeamById(teamId) });
+  } catch (err) {
+    next(err);
+  }
+};
+
 /** GET /api/football/teams/:id/matches?status=SCHEDULED|FINISHED */
 export const teamMatches: RequestHandler = async (req, res, next) => {
   try {
-    const teamId = Number(req.params.id);
-    if (!Number.isInteger(teamId) || teamId <= 0) {
-      throw ApiError.badRequest('معرّف الفريق غير صالح.');
-    }
+    const teamId = parseTeamId(req.params.id);
     const status =
       typeof req.query.status === 'string' ? req.query.status : undefined;
     res.json({ success: true, data: await getTeamMatches(teamId, status) });

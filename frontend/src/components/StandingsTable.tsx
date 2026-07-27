@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { StandingRow, teamRefToSummary } from '../types/football';
 import { hideOnImgError } from '../utils/img';
@@ -71,14 +72,14 @@ const StandingsTable = ({ code, onRequireAuth }: StandingsTableProps) => {
                 {row.position}
               </td>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-2">
+                <Link to={`/team/${row.team.id}`} className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400">
                   {row.team.crest && (
                     <img src={row.team.crest} alt={row.team.name} width={24} height={24} className="h-6 w-6 object-contain" loading="lazy" onError={hideOnImgError} />
                   )}
                   <span className="font-medium text-gray-900 dark:text-gray-100">
                     {row.team.shortName ?? row.team.name}
                   </span>
-                </div>
+                </Link>
               </td>
               <td className="px-3 py-2 text-center text-gray-600 dark:text-gray-400">{row.playedGames}</td>
               <td className="px-3 py-2 text-center text-gray-600 dark:text-gray-400">{row.won}</td>

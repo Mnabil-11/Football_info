@@ -5,6 +5,7 @@ import {
   competitionTeams,
   scorers,
   standings,
+  teamDetail,
   teamMatches,
 } from '../controllers/football.controller';
 import { getMatchDetails } from '../controllers/matchDetails.controller';
@@ -22,6 +23,7 @@ router.get('/competitions/:code/standings', cacheControl(300), standings);
 router.get('/competitions/:code/scorers', cacheControl(300), scorers);
 router.get('/competitions/:code/teams', cacheControl(600), competitionTeams);
 router.get('/competitions/:code/matches', cacheControl(120), competitionMatches);
+router.get('/teams/:id', cacheControl(3600), teamDetail);
 router.get('/teams/:id/matches', cacheControl(120), teamMatches);
 router.get('/matches/:id', cacheControl(60), getMatchDetails);
 router.get('/players/fd/:id', cacheControl(300), getPlayerFd);

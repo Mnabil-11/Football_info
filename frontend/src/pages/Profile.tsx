@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { SkeletonList } from '../components/common/Skeleton';
@@ -93,20 +94,25 @@ const Profile = ({ onBack }: ProfileProps) => {
                 key={fav.id}
                 className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
-                {fav.teamLogo && (
-                  <img
-                    src={fav.teamLogo}
-                    alt={fav.teamName}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 object-contain"
-                    loading="lazy"
-                    onError={hideOnImgError}
-                  />
-                )}
-                <span className="flex-1 font-medium text-gray-900 dark:text-gray-100">
-                  {fav.teamName}
-                </span>
+                <Link
+                  to={`/team/${fav.teamId}`}
+                  className="flex flex-1 items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  {fav.teamLogo && (
+                    <img
+                      src={fav.teamLogo}
+                      alt={fav.teamName}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 object-contain"
+                      loading="lazy"
+                      onError={hideOnImgError}
+                    />
+                  )}
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                    {fav.teamName}
+                  </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => handleRemove(fav.id)}
