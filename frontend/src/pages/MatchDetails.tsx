@@ -5,6 +5,7 @@ import { teamRefToSummary } from '../types/football';
 import { hideOnImgError } from '../utils/img';
 import { isFinished, isLive } from '../utils/matchStatus';
 import { parseStatValue, translateStatType } from '../utils/matchStats';
+import { buildMatchIcs, downloadIcsFile } from '../utils/ics';
 import { useMatchDetail } from '../hooks/useFootball';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
@@ -104,6 +105,18 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
     toggleFavorite(teamRefToSummary(team)).catch(() => {});
   };
 
+  const handleAddToCalendar = () => {
+    const ics = buildMatchIcs({
+      id: match.id,
+      utcDate: match.utcDate,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+      competitionName: match.competition?.name,
+      venue: match.venue,
+    });
+    downloadIcsFile(`match-${match.id}.ics`, ics);
+  };
+
   const homeLineup = enrichment?.lineups.find((l) => l.team.id === match.homeTeam.id);
   const awayLineup = enrichment?.lineups.find((l) => l.team.id === match.awayTeam.id);
   const homeStats = enrichment?.statistics.find((s) => s.team.id === match.homeTeam.id);
@@ -186,6 +199,18 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             {match.referees && match.referees.length > 0 && (
               <span>الحكم: {match.referees[0].name}</span>
             )}
+          </div>
+        )}
+
+        {!played && !live && (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={handleAddToCalendar}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              📅 أضف للتقويم
+            </button>
           </div>
         )}
       </div>
