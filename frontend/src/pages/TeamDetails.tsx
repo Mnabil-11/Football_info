@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { teamRefToSummary } from '../types/football';
 import { useTeamDetail, useTeamMatches } from '../hooks/useFootball';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import MatchCard from '../components/MatchCard';
@@ -24,6 +25,8 @@ const TeamDetails = ({ onRequireAuth }: TeamDetailsProps) => {
 
   const { data: team, isPending, error, refetch } = useTeamDetail(teamId);
   const { data: matches } = useTeamMatches(teamId);
+
+  useDocumentTitle(team?.name);
 
   const { upcoming, past } = useMemo(() => {
     const up = (matches ?? [])

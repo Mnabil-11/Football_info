@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './hooks/useTheme';
+import { useDocumentTitle } from './hooks/useDocumentTitle';
 import AuthModal from './components/AuthModal';
 import HomePage from './pages/HomePage';
 import Spinner from './components/common/Spinner';
@@ -13,6 +14,11 @@ const Profile = lazy(() => import('./pages/Profile'));
 const MatchDetails = lazy(() => import('./pages/MatchDetails'));
 const PlayerDetails = lazy(() => import('./pages/PlayerDetails'));
 const TeamDetails = lazy(() => import('./pages/TeamDetails'));
+
+const NotFoundPage = () => {
+  useDocumentTitle('الصفحة غير موجودة');
+  return <EmptyState message="الصفحة غير موجودة." icon="🔍" />;
+};
 
 function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -89,12 +95,7 @@ function App() {
               path="/team/:id"
               element={<TeamDetails onRequireAuth={() => setAuthOpen(true)} />}
             />
-            <Route
-              path="*"
-              element={
-                <EmptyState message="الصفحة غير موجودة." icon="🔍" />
-              }
-            />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </main>

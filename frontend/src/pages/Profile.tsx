@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { getBackendErrorMessage } from '../api/http';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { SkeletonList } from '../components/common/Skeleton';
 import Avatar from '../components/common/Avatar';
 import ErrorState from '../components/common/ErrorState';
@@ -273,6 +274,7 @@ const AccountSettings = ({ onAccountDeleted }: { onAccountDeleted: () => void })
 
 const Profile = ({ onBack }: ProfileProps) => {
   const { user } = useAuth();
+  useDocumentTitle('الحساب');
   const {
     favorites,
     loading,

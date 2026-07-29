@@ -7,6 +7,8 @@ import { isFinished, isLive } from '../utils/matchStatus';
 import { parseStatValue, translateStatType } from '../utils/matchStats';
 import { buildMatchIcs, downloadIcsFile } from '../utils/ics';
 import { useMatchDetail } from '../hooks/useFootball';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useJsonLd } from '../hooks/useJsonLd';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import PitchVisualization from '../components/PitchVisualization';
@@ -47,6 +49,28 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
     error,
     refetch,
   } = useMatchDetail(matchId);
+
+  useDocumentTitle(
+    data ? `${data.match.homeTeam.name} × ${data.match.awayTeam.name}` : undefined
+  );
+  useJsonLd(
+    data
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'SportsEvent',
+          name: `${data.match.homeTeam.name} vs ${data.match.awayTeam.name}`,
+          startDate: data.match.utcDate,
+          ...(data.match.venue ? { location: { '@type': 'Place', name: data.match.venue } } : {}),
+          competitor: [
+            { '@type': 'SportsTeam', name: data.match.homeTeam.name },
+            { '@type': 'SportsTeam', name: data.match.awayTeam.name },
+          ],
+          ...(data.match.competition?.name
+            ? { superEvent: { '@type': 'SportsEvent', name: data.match.competition.name } }
+            : {}),
+        }
+      : null
+  );
 
   const sortedEvents = useMemo(
     () =>

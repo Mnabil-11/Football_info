@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { getBackendErrorMessage } from '../api/http';
 import { AfPlayerStatsEntry, FdPlayerProfile } from '../types/football';
 import { usePlayerAf, usePlayerFd } from '../hooks/useFootball';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useAuth } from '../context/AuthContext';
 import { useFavorites } from '../context/FavoritesContext';
 import StatCard from '../components/common/StatCard';
@@ -56,6 +57,10 @@ const PlayerDetails = ({ onRequireAuth }: PlayerDetailsProps) => {
 
   const loading = active.isPending;
   const error = active.error;
+
+  useDocumentTitle(
+    data ? (data.provider === 'fd' ? data.profile.name : data.profile.player.name) : undefined
+  );
 
   if (!Number.isInteger(playerId) || playerId <= 0 || (provider !== 'fd' && provider !== 'af')) {
     return <ErrorState message="معرّف اللاعب غير صالح." />;

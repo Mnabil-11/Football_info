@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getBackendErrorMessage } from '../api/http';
 import { useCompetitions } from '../hooks/useFootball';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useAuth } from '../context/AuthContext';
 import CompetitionSelect from '../components/CompetitionSelect';
 import SearchBar from '../components/SearchBar';
@@ -42,6 +43,8 @@ const HomePage = ({ onRequireAuth }: HomePageProps) => {
 
   const code = pickedCode ?? competitions[0]?.code ?? '';
   const selected = competitions.find((c) => c.code === code);
+
+  useDocumentTitle(selected?.name);
 
   return (
     <>
