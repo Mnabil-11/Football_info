@@ -20,6 +20,10 @@ const envSchema = z.object({
   APIFOOTBALL_HOST: z.string().default('api-football-v1.p.rapidapi.com'),
   PORT: z.coerce.number().int().positive().default(4000),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
+  // Optional: when set, the upstream-response cache (utils/cache.ts) uses
+  // Redis instead of an in-memory Map, so cached data survives cold starts
+  // and is shared across instances. Unset in local dev.
+  REDIS_URL: z.string().url().optional(),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),

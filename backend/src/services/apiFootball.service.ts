@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { env } from '../config/env';
-import { TtlCache } from '../utils/cache';
+import { createCache } from '../utils/cache';
 import {
   AfEvent,
   AfFixtureRef,
@@ -28,7 +28,7 @@ const client: AxiosInstance = axios.create({
   timeout: 15_000,
 });
 
-const cache = new TtlCache(300_000);
+const cache = createCache(300_000);
 
 /** GET against API-Football, returning `null` on ANY failure (never throws). */
 const safeGet = async <T>(

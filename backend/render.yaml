@@ -1,0 +1,39 @@
+# Render blueprint: https://render.com/docs/blueprint-spec
+# Deploy: connect this repo in the Render dashboard, "New +" -> "Blueprint",
+# then fill in the `sync: false` env vars (secrets) in the dashboard.
+#
+# REDIS_URL: Render's free plan no longer includes a Redis instance, so
+# provision one on Upstash (https://upstash.com, free tier) and paste its
+# connection string here. Leave it unset to fall back to the in-memory
+# cache — fine for a single always-on instance, but it resets on every
+# cold start / redeploy.
+services:
+  - type: web
+    name: football-info-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FOOTBALL_DATA_KEY
+        sync: false
+      - key: APIFOOTBALL_KEY
+        sync: false
+      - key: APIFOOTBALL_HOST
+        value: api-football-v1.p.rapidapi.com
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: REDIS_URL
+        sync: false

@@ -1,0 +1,15 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Netlify also reads public/_redirects (copied into dist at build time), which
+# does the same SPA fallback — this block is the equivalent for anyone who
+# configures the site without deploying that file.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

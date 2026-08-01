@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { env } from '../config/env';
 import { ApiError } from '../utils/ApiError';
-import { TtlCache } from '../utils/cache';
+import { createCache } from '../utils/cache';
 import {
   FdCompetitionsResponse,
   FdMatchDetail,
@@ -20,7 +20,7 @@ const client: AxiosInstance = axios.create({
 });
 
 // Cache upstream responses briefly to respect the free-tier rate limit.
-const cache = new TtlCache(60_000);
+const cache = createCache(60_000);
 
 /** Perform a cached GET against football-data.org, mapping errors to ApiError. */
 const get = async <T>(

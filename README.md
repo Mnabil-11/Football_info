@@ -210,6 +210,15 @@ Required env (`backend/.env`):
 
 ---
 
+## Deployment
+
+See [DEPLOY.md](DEPLOY.md) — frontend on Vercel/Netlify, API on
+Render/Railway/Fly.io, plus the Redis cache and production env vars
+(`NODE_ENV=production` is required, not optional — it enables secure cookies
+and locks down CORS).
+
+---
+
 ## API Endpoints
 
 | Method | Path | Auth | Description |

@@ -1,5 +1,6 @@
 import { env } from './config/env';
 import { prisma } from './config/prisma';
+import { closeCache } from './utils/cache';
 import app from './app';
 
 const server = app.listen(env.PORT, () => {
@@ -20,7 +21,9 @@ const shutdown = (signal: string): void => {
   console.log(`${signal} received: closing server gracefully...`);
 
   server.close(() => {
-    void prisma.$disconnect().finally(() => process.exit(0));
+    void Promise.allSettled([prisma.$disconnect(), closeCache()]).finally(() =>
+      process.exit(0)
+    );
   });
 
   // Belt-and-suspenders: force-exit if close() hangs (e.g. a stuck connection).
