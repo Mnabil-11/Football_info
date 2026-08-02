@@ -285,9 +285,9 @@ const MatchDetails = ({ onRequireAuth }: MatchDetailsProps) => {
             <section>
               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-gray-100">الأحداث</h3>
               <ul className="space-y-2">
-                {sortedEvents.map((event, index) => (
+                {sortedEvents.map((event) => (
                   <li
-                    key={index}
+                    key={`${event.time.elapsed}-${event.player.id ?? event.player.name}-${event.type}`}
                     className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
                   >
                     <span className="w-10 text-center font-semibold text-gray-500 dark:text-gray-400">

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Lineup, LineupPlayerEntry } from '../types/football';
 
 interface PitchVisualizationProps {
@@ -78,7 +79,7 @@ const PlayerDot = ({
   </g>
 );
 
-const PitchVisualization = ({ home, away }: PitchVisualizationProps) => {
+const PitchVisualization = memo(function PitchVisualization({ home, away }: PitchVisualizationProps) {
   const maxRow = 6;
 
   return (
@@ -128,6 +129,6 @@ const PitchVisualization = ({ home, away }: PitchVisualizationProps) => {
       </div>
     </div>
   );
-};
+});
 
 export default PitchVisualization;

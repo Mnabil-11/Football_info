@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Competition, TeamRef } from '../types/football';
 import { useCompetitionTeamsList } from '../hooks/useFootball';
@@ -24,6 +24,10 @@ const SearchBar = ({ competitions, currentCode, onSelectCompetition }: SearchBar
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const debouncedQuery = useDebouncedValue(query, 200);
+
+  // Timer ref for blur delay — cleaned up on unmount to prevent state updates on unmounted component.
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(blurTimerRef.current), []);
 
   const { data: teams = [] } = useCompetitionTeamsList(currentCode);
 
@@ -76,7 +80,7 @@ const SearchBar = ({ competitions, currentCode, onSelectCompetition }: SearchBar
         }}
         onFocus={() => setOpen(true)}
         // Delay closing so a click on a result registers before the dropdown unmounts.
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onBlur={() => { blurTimerRef.current = setTimeout(() => setOpen(false), 150); }}
         placeholder="ابحث عن فريق أو مسابقة..."
         aria-label="بحث عن فريق أو مسابقة"
         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"

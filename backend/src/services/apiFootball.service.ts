@@ -144,7 +144,7 @@ export const findPlayerByNameAndTeam = async (
     );
     const found = results?.find((entry) =>
       entry.statistics.some(
-        (stat) => stat.team.name.toLowerCase() === teamName.toLowerCase()
+        (stat) => stat.team?.name?.toLowerCase() === teamName.toLowerCase()
       )
     );
     if (found) {
